@@ -1,0 +1,221 @@
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8" /></head><body><table class="table table-bordered table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:30%">
+                                <a ng-click="vm.sortType = 'commodityCode'; vm.sortReverse = !vm.sortReverse">
+                                    Commodity Code
+                                    <span ng-show="vm.sortType === 'commodityCode' &amp;&amp; !vm.sortReverse" class="fa fa-caret-down ng-hide"></span>
+                                    <span ng-show="vm.sortType === 'commodityCode' &amp;&amp; vm.sortReverse" class="fa fa-caret-up ng-hide"></span>
+                                </a>
+                            </th>
+                            <th style="width:70%">
+                                <a ng-click="vm.sortType = 'commodityName'; vm.sortReverse = !vm.sortReverse">
+                                    Commodity Name
+                                    <span ng-show="vm.sortType === 'commodityName' &amp;&amp; !vm.sortReverse" class="fa fa-caret-down ng-hide"></span>
+                                    <span ng-show="vm.sortType === 'commodityName' &amp;&amp; vm.sortReverse" class="fa fa-caret-up ng-hide"></span>
+                                </a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0577400</td>
+                            <td class="ng-binding">Almonds, Shelled Basis</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0011000</td>
+                            <td class="ng-binding">Animal Numbers, Cattle</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0013000</td>
+                            <td class="ng-binding">Animal Numbers, Swine</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0574000</td>
+                            <td class="ng-binding">Apples, Fresh</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0430000</td>
+                            <td class="ng-binding">Barley</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0579305</td>
+                            <td class="ng-binding">Cherries (Sweet&amp;Sour), Fresh</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0711100</td>
+                            <td class="ng-binding">Coffee, Green</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0440000</td>
+                            <td class="ng-binding">Corn</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2631000</td>
+                            <td class="ng-binding">Cotton</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0230000</td>
+                            <td class="ng-binding">Dairy, Butter</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0240000</td>
+                            <td class="ng-binding">Dairy, Cheese</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0224400</td>
+                            <td class="ng-binding">Dairy, Dry Whole Milk Powder</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0223000</td>
+                            <td class="ng-binding">Dairy, Milk, Fluid</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0224200</td>
+                            <td class="ng-binding">Dairy, Milk, Nonfat Dry</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0577500</td>
+                            <td class="ng-binding">Filberts, Inshell Basis</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0572220</td>
+                            <td class="ng-binding">Grapefruit, Fresh</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0575100</td>
+                            <td class="ng-binding">Grapes, Fresh Table</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0572120</td>
+                            <td class="ng-binding">Lemons/Limes, Fresh</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0813700</td>
+                            <td class="ng-binding">Meal, Copra</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0813300</td>
+                            <td class="ng-binding">Meal, Cottonseed</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0814200</td>
+                            <td class="ng-binding">Meal, Fish</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0813800</td>
+                            <td class="ng-binding">Meal, Palm Kernel</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0813200</td>
+                            <td class="ng-binding">Meal, Peanut</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0813600</td>
+                            <td class="ng-binding">Meal, Rapeseed</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0813100</td>
+                            <td class="ng-binding">Meal, Soybean</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0813101</td>
+                            <td class="ng-binding">Meal, Soybean (Local)</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0813500</td>
+                            <td class="ng-binding">Meal, Sunflowerseed</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0111000</td>
+                            <td class="ng-binding">Meat, Beef and Veal</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0115000</td>
+                            <td class="ng-binding">Meat, Chicken</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0113000</td>
+                            <td class="ng-binding">Meat, Swine</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0459100</td>
+                            <td class="ng-binding">Millet</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0459900</td>
+                            <td class="ng-binding">Mixed Grain</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0452000</td>
+                            <td class="ng-binding">Oats</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4242000</td>
+                            <td class="ng-binding">Oil, Coconut</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4233000</td>
+                            <td class="ng-binding">Oil, Cottonseed</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4235000</td>
+                            <td class="ng-binding">Oil, Olive</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4243000</td>
+                            <td class="ng-binding">Oil, Palm</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4244000</td>
+                            <td class="ng-binding">Oil, Palm Kernel</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4234000</td>
+                            <td class="ng-binding">Oil, Peanut</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4239100</td>
+                            <td class="ng-binding">Oil, Rapeseed</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4232000</td>
+                            <td class="ng-binding">Oil, Soybean</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4232001</td>
+                            <td class="ng-binding">Oil, Soybean (Local)</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4236000</td>
+                            <td class="ng-binding">Oil, Sunflowerseed</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2231000</td>
+                            <td class="ng-binding">Oilseed, Copra</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2223000</td>
+                            <td class="ng-binding">Oilseed, Cottonseed</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2232000</td>
+                            <td class="ng-binding">Oilseed, Palm Kernel</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2221000</td>
+                            <td class="ng-binding">Oilseed, Peanut</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2226000</td>
+                            <td class="ng-binding">Oilseed, Rapeseed</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2222000</td>
+                            <td class="ng-binding">Oilseed, Soybean</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2222001</td>
+                            <td class="ng-binding">Oilseed, Soybean (Local)</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2224000</td>
+                            <td class="ng-binding">Oilseed, Sunflowerseed</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0585100</td>
+                            <td class="ng-binding">Orange Juice</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0571120</td>
+                            <td class="ng-binding">Oranges, Fresh</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0579309</td>
+                            <td class="ng-binding">Peaches &amp; Nectarines, Fresh</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0579220</td>
+                            <td class="ng-binding">Pears, Fresh</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0577907</td>
+                            <td class="ng-binding">Pistachios, Inshell Basis</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0114200</td>
+                            <td class="ng-binding">Poultry, Meat, Broiler</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0114300</td>
+                            <td class="ng-binding">Poultry, Meat, Turkey</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0575200</td>
+                            <td class="ng-binding">Raisins</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0422110</td>
+                            <td class="ng-binding">Rice, Milled</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0451000</td>
+                            <td class="ng-binding">Rye</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0459200</td>
+                            <td class="ng-binding">Sorghum</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0612000</td>
+                            <td class="ng-binding">Sugar, Centrifugal</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0571220</td>
+                            <td class="ng-binding">Tangerines/Mandarins, Fresh</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0577901</td>
+                            <td class="ng-binding">Walnuts, Inshell Basis</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">0410000</td>
+                            <td class="ng-binding">Wheat</td>
+                        </tr><!-- end ngRepeat: commodity in vm.commodities | orderBy:vm.sortType:vm.sortReverse -->
+                    </tbody>
+                </table></body></html>

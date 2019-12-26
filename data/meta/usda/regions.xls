@@ -1,0 +1,68 @@
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8" /></head><body><table class="table table-bordered table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:30%">
+                                <a ng-click="vm.sortType = 'regionCode'; vm.sortReverse = !vm.sortReverse">
+                                    Region Code
+                                    <span ng-show="vm.sortType === 'regionCode' &amp;&amp; !vm.sortReverse" class="fa fa-caret-down ng-hide"></span>
+                                    <span ng-show="vm.sortType === 'regionCode' &amp;&amp; vm.sortReverse" class="fa fa-caret-up ng-hide"></span>
+                                </a>
+                            </th>
+                            <th style="width:70%">
+                                <a ng-click="vm.sortType = 'regionName'; vm.sortReverse = !vm.sortReverse">
+                                    Region Name
+                                    <span ng-show="vm.sortType === 'regionName' &amp;&amp; !vm.sortReverse" class="fa fa-caret-down ng-hide"></span>
+                                    <span ng-show="vm.sortType === 'regionName' &amp;&amp; vm.sortReverse" class="fa fa-caret-up ng-hide"></span>
+                                </a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R00</td>
+                            <td class="ng-binding">World</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R01</td>
+                            <td class="ng-binding">North America</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R02</td>
+                            <td class="ng-binding">Caribbean</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R03</td>
+                            <td class="ng-binding">Central America</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R04</td>
+                            <td class="ng-binding">South America</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R05</td>
+                            <td class="ng-binding">European Union - 28</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R07</td>
+                            <td class="ng-binding">Former Soviet Union - 12</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R09</td>
+                            <td class="ng-binding">Middle East</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R10</td>
+                            <td class="ng-binding">North Africa</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R11</td>
+                            <td class="ng-binding">Sub-Saharan Africa</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R12</td>
+                            <td class="ng-binding">South Asia</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R14</td>
+                            <td class="ng-binding">Oceania</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R16</td>
+                            <td class="ng-binding">Other Europe</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R17</td>
+                            <td class="ng-binding">Southeast Asia</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="region in vm.regions | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">R18</td>
+                            <td class="ng-binding">East Asia</td>
+                        </tr><!-- end ngRepeat: region in vm.regions | orderBy:vm.sortType:vm.sortReverse -->
+                    </tbody>
+                </table></body></html>

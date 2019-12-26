@@ -1,0 +1,146 @@
+<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8" /></head><body><table class="table table-bordered table-condensed table-striped">
+                    <thead>
+                        <tr>
+                            <th style="width:30%">
+                                <a ng-click="vm.sortType = 'unitId'; vm.sortReverse = !vm.sortReverse">
+                                    Unit Id
+                                    <span ng-show="vm.sortType === 'unitId' &amp;&amp; !vm.sortReverse" class="fa fa-caret-down ng-hide"></span>
+                                    <span ng-show="vm.sortType === 'unitId' &amp;&amp; vm.sortReverse" class="fa fa-caret-up ng-hide"></span>
+                                </a>
+                            </th>
+                            <th style="width:70%">
+                                <a ng-click="vm.sortType = 'unitDescription'; vm.sortReverse = !vm.sortReverse">
+                                    Unit Name
+                                    <span ng-show="vm.sortType === 'unitDescription' &amp;&amp; !vm.sortReverse" class="fa fa-caret-down ng-hide"></span>
+                                    <span ng-show="vm.sortType === 'unitDescription' &amp;&amp; vm.sortReverse" class="fa fa-caret-up ng-hide"></span>
+                                </a>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope" style="">
+                            <td class="ng-binding">1</td>
+                            <td class="ng-binding">(1000 BUSHES)       </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">2</td>
+                            <td class="ng-binding">(1000 60 KG BAGS)   </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">3</td>
+                            <td class="ng-binding">(1000 COLONIES)     </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">4</td>
+                            <td class="ng-binding">(1000 HA)           </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">5</td>
+                            <td class="ng-binding">(1000 HEAD)         </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">6</td>
+                            <td class="ng-binding">(1000 HL)           </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">7</td>
+                            <td class="ng-binding">(1000 MT CWE)       </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">8</td>
+                            <td class="ng-binding">(1000 MT)           </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">9</td>
+                            <td class="ng-binding">(1000 PCS)          </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">10</td>
+                            <td class="ng-binding">(1000 TREES)        </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">11</td>
+                            <td class="ng-binding">(Dec. Fraction)     </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">12</td>
+                            <td class="ng-binding">(HA)                </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">13</td>
+                            <td class="ng-binding">(HECTARES)          </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">14</td>
+                            <td class="ng-binding">(KG)                </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">15</td>
+                            <td class="ng-binding">(MIL HEAD)          </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">16</td>
+                            <td class="ng-binding">(MIL PCS)           </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">17</td>
+                            <td class="ng-binding">(MILLION TREES)     </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">18</td>
+                            <td class="ng-binding">(MT RAW EQ)         </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">19</td>
+                            <td class="ng-binding">(MT RAW EW)         </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">20</td>
+                            <td class="ng-binding">(MT RE)             </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">21</td>
+                            <td class="ng-binding">(MT)                </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">22</td>
+                            <td class="ng-binding">(MT, Net Weight)    </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">23</td>
+                            <td class="ng-binding">(PERCENT)           </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">24</td>
+                            <td class="ng-binding">(RATIO)             </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">25</td>
+                            <td class="ng-binding">(1000 CUBIC METERS) </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">26</td>
+                            <td class="ng-binding">(MT/HA)             </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">27</td>
+                            <td class="ng-binding">1000 480 lb. Bales  </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">28</td>
+                            <td class="ng-binding">(Bales/HA)          </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">29</td>
+                            <td class="ng-binding">(KG/HA)             </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">30</td>
+                            <td class="ng-binding">ACRES               </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">31</td>
+                            <td class="ng-binding">BUSHELS             </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">32</td>
+                            <td class="ng-binding">HUNDREDWEIGHT       </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">33</td>
+                            <td class="ng-binding">MILLING RATE        </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">34</td>
+                            <td class="ng-binding">BUSHELS/TON         </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">35</td>
+                            <td class="ng-binding">IMPORT MILLING RATE </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">36</td>
+                            <td class="ng-binding">Bushels             </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">37</td>
+                            <td class="ng-binding">SHORT TONS          </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">38</td>
+                            <td class="ng-binding">MILLION LBS         </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">39</td>
+                            <td class="ng-binding">BILLION LBS         </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">40</td>
+                            <td class="ng-binding">(HEAD)              </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse --><tr ng-repeat="uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse" class="ng-scope">
+                            <td class="ng-binding">41</td>
+                            <td class="ng-binding">(PEOPLE)            </td>
+                        </tr><!-- end ngRepeat: uom in vm.uoms | orderBy:vm.sortType:vm.sortReverse -->
+                    </tbody>
+                </table></body></html>
