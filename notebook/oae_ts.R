@@ -37,7 +37,7 @@ unit_test = function(data, type=c("drift", "trend"), difference=FALSE) {
     ser = if (difference) diff(ser) else ser 
     level = if (difference) "d1" else "d0"
       
-    adf = ur.df(ser, type = type, selectlags = "BIC")
+    adf = ur.df(ser, type = type, selectlags = "AIC")
     test_res = adf_report(adf)
     test_res['col_name']  = col_names[i]
     res_1 = rbind(res_1, test_res)
