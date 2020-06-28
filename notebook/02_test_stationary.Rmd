@@ -1,0 +1,1217 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+# โหลด R packages และ ข้อมูล
+
+```{r}
+ur_adf_seq <- function(y)
+{
+  ur.trend <- ur.df(y, type='trend', selectlags = c("AIC"))
+  tstat.trend <- ur.trend@teststat
+  cv.trend <- ur.trend@cval
+  res.trend <- cbind(t(round(tstat.trend,2)),cv.trend)
+  nam.trend <- rownames(res.trend)
+  nam.trend[agrep("tau", nam.trend)] <- "pi"
+  nam.trend[grep("phi2", nam.trend)] <- "varphi2"
+  nam.trend[grep("phi3", nam.trend)] <- "varphi3"
+  rownames(res.trend) <- nam.trend
+
+  ur.drift <- ur.df(y, type='drift', selectlags = c("AIC"))
+  tstat.drift <- ur.drift@teststat
+  cv.drift <- ur.drift@cval
+  res.drift <- cbind(t(round(tstat.drift,2)),cv.drift)
+  nam.drift <- rownames(res.drift)
+  nam.drift[agrep("tau", nam.drift)] <- "pi"
+  nam.drift[grep("phi1", nam.drift)] <- "varphi1"
+  rownames(res.drift) <- nam.drift
+
+  ur.none <- ur.df(y, type='none', selectlags = c("AIC"))
+  tstat.none <- ur.none@teststat
+  cv.none <- ur.none@cval
+  res.none <- cbind(t(round(tstat.none,2)),cv.none)
+  nam.none <- rownames(res.none)
+  nam.none[agrep("tau", nam.none)] <- "pi"
+  rownames(res.none) <- nam.none
+
+  # step 1 : Estimate with constant and trend and Test
+  # print summary
+  cat(" ", "\n")
+  cat("#################", "\n")
+  cat("## ADF summary ##", "\n")
+  cat("#################", "\n")
+  cat(" ", "\n")
+  
+  res = list(res.trend, res.drift, res.none)
+  return(res)
+  
+  
+#   if (res.trend[1,1] <= res.trend[1,3]) {
+#     cat("Able to reject null of unit root at 5% - with constant & trend", "\n")
+#   }else if (res.trend[1,1] > res.trend[1,3] && res.trend[2,1] >= res.trend[2,3]) {
+#     cat("Unable to reject null of unit root at 5% - with constant & trend", "\n")
+
+#   }else if (res.drift[1,1] <= res.drift[1,3]) {
+#     cat("Able to reject null of unit root at 5% - with constant", "\n")
+#   }else if (res.drift[1,1] > res.drift[1,3] && res.drift[2,1] >= res.drift[2,3]) {
+#     cat("Unable to reject null of unit root at 5% - with constant", "\n")
+
+#   }else if (res.none[1,1] <= res.none[1,3]) {
+#     cat("Able to reject null of unit root at 5% - no deterministic", "\n")
+#   }else {cat("Cannot reject null of unit root at 5% - no deterministic", "\n")}
+
+#   # print results
+#   cat(" ", "\n")
+#   cat("## ADF with constrant and time trend ##", "\n")
+#   print(res.trend)
+#   cat(" ", "\n")
+#   if (res.trend[1,1] > res.trend[1,3]) {
+#     cat("Cannot reject null of unit root at 5%", "\n")
+#   }else cat("Able to reject null of unit root at 5%", "\n")
+#     if (res.trend[2,1] < res.trend[2,3]) {
+#     cat("Cannot reject null of no constant and no trend at 5%", "\n")
+#   }else cat("Able to reject null of no constant and no trend at 5%", "\n")
+#   if (res.trend[3,1] < res.trend[3,3]) {
+#     cat("Cannot reject null of no trend at 5%", "\n")
+#   }else cat("Able to reject null of no trend at 5%", "\n")
+#   cat(" ", "\n")
+
+#   cat("## ADF with constrant ##", "\n")
+#   print(res.drift)
+#   cat(" ", "\n")
+#   if (res.drift[1,1] > res.drift[1,3]) {
+#     cat("Cannot reject null of unit root at 5%", "\n")
+#   }else cat("Able to reject null of unit root at 5%", "\n")
+#   if (res.drift[2,1] < res.drift[2,3]) {
+#     cat("Cannot reject null of no constant at 5%", "\n")
+#   }else cat("Able to reject null of no constant at 5%", "\n")
+#   cat(" ", "\n")
+
+#   cat("## ADF with no deterministic ##", "\n")
+#   print(res.none)
+#   cat(" ", "\n")
+#   if (res.none[1,1] > res.none[1,3]) {
+#     cat("Cannot reject null of unit root at 5%", "\n")
+#   }else cat("Able to reject null of unit root at 5%", "\n")
+#   cat(" ", "\n")
+
+}
+```
+
+```{r}
+
+```
+
+```{r}
+y = price[, 1]
+```
+
+```{r}
+ur_adf_seq(y)
+```
+
+```{r}
+ur.trend <- ur.df(y, type='trend', selectlags = c("AIC"))
+```
+
+```{r}
+ur.trend@teststat[1]
+```
+
+```{r}
+slotNames(ur.trend)
+```
+
+```{r}
+str(ur.trend@testreg)
+```
+
+```{r}
+ur.trend@testreg$df[2]
+```
+
+```{r}
+2*stats::pnorm(-abs(3.548))
+```
+
+```{r}
+2*stats::pt(-abs(3.548), 369)
+```
+
+```{r}
+price = readRDS('../data/rice/rice_price_filled.rds')
+```
+
+```{r}
+source("../R/oaeTS.R", encoding = "UTF-8")
+year_now = 2563
+
+options(
+  repr.plot.width=10,
+  repr.plot.height=6,
+  repr.plot.res=300
+)
+```
+
+```{r}
+
+```
+
+```{r}
+price = readRDS('../data/rice/rice_price_filled.rds')
+var_names = colnames(price)
+colnames(price) = str_replace(colnames(price), "_0", "")
+price_xts = price %>% as.xts()
+price_log = price
+price_log[, startsWith(var_names, 'R')] = 
+  price_log[, startsWith(var_names, 'R')] %>% log()
+tail(price_log)
+```
+
+## Plot กราฟ ACF และ PACF
+
+```{r}
+plot_tsexplore = function(y, name = "price", ...){
+  
+  layout(matrix(c(1,1,2,3), 2, 2, byrow = TRUE),
+         widths=c(1,1), heights=c(1,.7))
+  par(mar = c(4, 2, 3, .2))
+  
+  plot(y, main = name  , ylab = "", xlab="Year")
+  acf( y, main = "ACF" , ylab = "")
+  pacf(y, main = "PACF", ylab = "")
+}
+
+save_plot_tsexplore = function(data) {
+  names = colnames(data)
+  
+  for(i in seq_along(names)){
+    name = names[i]
+    y = data[, i] %>% na.omit()
+    
+    filename = paste0("../img/plot_", name, ".png")
+    png(filename = filename,
+      units = "in", 
+      width = 5, 
+      height = 4, 
+      pointsize = 10, 
+      res = 300)
+    
+    plot_tsexplore(y, name)
+    
+    dev.off()
+  }
+}
+```
+
+```{r}
+# ทดสอบ
+y = price[, 1] %>% na.omit()
+plot_tsexplore(y)
+```
+
+```{r}
+# save_plot_tsexplore(price)
+```
+
+## แยกข้อมูลราคาออกเป็นกลุ่ม
+
+```{r}
+rh   = price_log[, c('RHFG', 'RHWS', 'RHXB', 
+                     'd_foodcrisis', 'd_pledge')] %>% na.omit()
+rw   = price_log[, c('RWFG', 'RWWS', 'RWXB',
+                     'd_foodcrisis', 'd_pledge')] %>% na.omit()
+rg   = price_log[, c('RGFG', 'RGWS', 'RGXB', 
+                     'd_foodcrisis', 'd_pledge')] %>% na.omit()
+
+rhfg = price_log[, c('RHFG_NR', 'RHFG_BR', 'RHFG_SI', 'RHFG_SU', 'RHFG_UR',
+                     'd_foodcrisis', 'd_pledge')] %>% na.omit()
+rwfg = price_log[, c('RWFG_NS', 'RWFG_KP', 'RWFG_PC', 'RWFG_PS', 'RWFG_SH',
+                     'd_foodcrisis', 'd_pledge')] %>% na.omit()
+rgfg = price_log[, c('RGFG_UN', 'RGFG_SN', 'RGFG_KK', 'RGFG_MS', 'RGFG_KL', 
+                     'd_foodcrisis', 'd_pledge')] %>% na.omit()
+
+rfg  = price_log[, c('RHFG', 'RWFG', 'RGFG', 
+                     'd_foodcrisis', 'd_pledge')] %>% na.omit()
+
+rice_list = list(rh, rw, rg, rhfg, rwfg, rgfg, rfg) %>%
+  set_names(c('rh', 'rw', 'rg', 'rhfg', 'rwfg', 'rgfg', 'rfg'))
+```
+
+## สร้าง helper function ในการทดสอบ stationary
+
+```{r}
+star_tstat = function (tstat, cval=NULL, pval=NULL) {
+  # cval need to be vector with name
+  rounded = format(tstat, digits = 2, nsmall=2)
+  
+  if (!is.null(cval)) {
+    x = case_when(
+     abs(tstat) >= abs(cval['cv01']) ~ paste0(rounded, '***'),
+     abs(tstat) >= abs(cval['cv05']) ~ paste0(rounded, '** '),
+     abs(tstat) >= abs(cval['cv10']) ~ paste0(rounded, '*  '),
+     TRUE ~ paste0(rounded, '   ') 
+    )
+  } else if (!is.null(pval)) {
+    x = case_when(
+      pval <= 0.01 ~ paste0(rounded, '***'),
+      pval <= 0.05 ~ paste0(rounded, '** '),
+      pval <= 0.10 ~ paste0(rounded, '*  '),
+      TRUE ~ paste0(rounded, '   ')
+    )
+  }
+  
+  return(x)
+}
+
+
+report_test = function(ys, ur_test, differences, specs) {
+  
+  y_names = colnames(ys)
+  df = data.frame()
+  for (y_name in y_names) {
+    y = ys[, y_name]
+    df_ = data.frame()
+    for (n_diff in differences) {
+      for (spec in specs) {
+        res = ur_test(y, n_diff = n_diff, spec = spec)
+        df_ = df_ %>% rbind(res)
+      }
+    }
+    df_['variable'] = y_name 
+    df = df %>% rbind(df_)
+  }
+  
+  return(df %>% select(variable, everything()))
+}
+```
+
+<!-- #region toc-hr-collapsed=true toc-nb-collapsed=true -->
+# ทดสอบ Structural Break
+<!-- #endregion -->
+
+## Zivot-Andrew 1 Break
+
+```{r}
+args(ur.za)
+getSlots("ur.za")
+```
+
+```{r}
+# for (lag in rev(0:10)) {
+#   obj = ur.za(y, model = "intercept", lag = lag)
+#   coef = summary(obj@testreg)$coefficients
+#   last_lag = if (obj@model == "both") nrow(coef)-2 else nrow(coef)-1
+#   if ( coef[last_lag, 4] < 0.05 ) break # test significant of the last lag
+# }
+
+# test = ur.za(y, model = "both", lag = 2)
+# summary(test@testreg)$coefficients
+
+# bpoint = test@'bpoint'
+# as.Date(y[bpoint])
+```
+
+```{r}
+ur_za = function(y, n_diff = 0,
+                 spec = c("ct", "t", "c"),
+                 max_lag = 12) {
+  
+  # 1 Set up
+  y = if (n_diff>0) diff(y, n_diff) %>% na.omit() else y %>% na.omit()
+  difference = paste0("d", n_diff)
+  
+  spec = match.arg(spec)
+  model = case_when(
+    spec == "ct" ~ "both",
+    spec == "t"  ~ "trend",
+    spec == "c"  ~ "intercept",
+  )
+  
+  # 2 Estimation
+  for (lag in rev(0:max_lag)) {
+    obj = ur.za(y, model = model, lag = lag)
+    coef = summary(obj@testreg)$coefficients
+    last_lag = if (model == "both") nrow(coef)-2 else nrow(coef)-1  
+    if ( coef[last_lag, 4] < 0.05 ) break # test significant of the last lag
+  }
+  
+  # 3 Report
+  n_lag = obj@'lag'
+  tstat = obj@'teststat'
+  bpoint = obj@bpoint
+  cval = obj@'cval'
+  names(cval) = c('cv01', 'cv05', 'cv10')
+  ZA_bpoint = as.Date(index(as.xts(y))[bpoint])
+  ZA_nlag = n_lag
+  ZA_tau = star_tstat(tstat, cval)
+  
+  res = data.frame(difference, spec, ZA_nlag, ZA_tau, ZA_bpoint, 
+                   stringsAsFactors = FALSE)
+  
+  return(res)
+}
+
+# test
+ur_za(y, spec = "c", max_lag=12)
+```
+
+```{r}
+report_test(price_log,
+            ur_test = ur_za, 
+            differences = c(0, 1), 
+            specs = c("ct", "c")
+           ) -> table_za
+
+write.xlsx2(table_za, '../result/result_za.xlsx', row.names = FALSE)
+```
+
+```{r}
+table_za
+# table_za %>% kable() %>% as.character() %>% display_html()
+```
+
+## Lee Straz
+
+```{r}
+source("y.R")
+source("LeeStrazicichUnitRootTest.R")
+source("LeeStrazicichUnitRootTestParallelization.R")
+plot(y)
+
+
+library(foreach)
+library(doSNOW)
+library(parallel)
+
+#Define number of cores to use. By default the maximum available number minus one core is used
+cl <- makeCluster(max(1, detectCores() - 1))
+registerDoSNOW(cl)
+
+myBreaks <- 2
+# Assumed break in the series, "crash" - break in intercept; "break" - break in intercept and trend
+myModel <- "break"
+# Number of lags to be used in fixed specification or maximum number of lags, when using the GTOS method
+myLags <- 5
+
+myParallel_LS <- ur.ls.bootstrap(y=y , model = myModel, breaks = myBreaks, lags = myLags, 
+                                 method = "GTOS", pn = 0.1, critval = "bootstrap", 
+                                 print.results = "print")
+```
+
+```{r}
+#Bootstrap implementation used in this case is based on Residual Resampling
+# Steps involved
+# (1) estimation of the initial estimation of y.diff
+# (2) use the residuals from (1) to calculate the restricted residuals based on S.tilde
+# (3) draw a random sample from the residuals with replacement with the lenght of the original residuals - sample() available in R
+# (4) test regression with the pseudo sample y*, which was created with the resampled residuals
+# (5) repeat (3) and (4) n.times and save each resulting t-stat from the repetitions
+# 
+# Bootstrap procedure needs to be done for values of y*, but also the minimum LM stat 
+# is calculated for each series, so the test has to be applied to all replicated y* time series.
+# Bootstrap the distribution of the t-statistic based on the determined break dates
+
+#-----------------------------------------------------------------------------
+# Set the number of replications
+#-----------------------------------------------------------------------------
+
+n.sim <- 1000
+
+#-----------------------------------------------------------------------------
+# Initialize the parallelization framework
+#-----------------------------------------------------------------------------
+# 
+library(foreach)
+library(doSNOW)
+library(parallel)
+
+cl <- makeCluster(max(1, detectCores() - 2))
+registerDoSNOW(cl)
+
+#Define variable y, which is the variable to be analysed
+myVariable <- y
+
+lagmatrix <- function(x, max.lag) {
+  embed(c(rep(NA, max.lag), x), max.lag+1)
+}
+
+#Add diffmatrix function
+diffmatrix <- function(x, max.diff = 1, max.lag = 1) {
+  #Add if condition to make it possible to differentiate between matrix and vector                  
+  if (is.vector(x) == TRUE ) {
+    myx <- embed(c(rep(NA,max.lag), diff(x,max.lag,max.diff)), max.diff)
+    colnames(myx) <- paste("v1.d",max.diff, sep=".")
+    return(myx)
+  } else if (is.matrix(x) == TRUE) {
+    myx <- rbind(matrix(rep(NA,max.lag), ncol = ncol(x)), matrix(diff(x,max.lag,max.diff), ncol = ncol(x)))
+    mycolnames <- colnames(x)
+    colnames(myx) <- paste(mycolnames,"d",max.diff, sep=".")
+    return(myx)
+  } else if (as.integer(is.null(ncol(x))) == 0 ) {
+    #if matrix the result should be 0, if only a vector it should be 1
+    myx <- rbind(matrix(rep(NA,max.lag), ncol = ncol(x)), matrix(diff(x,max.lag,max.diff), ncol = ncol(x)))
+    mycolnames <- colnames(x)
+    colnames(myx) <- paste(mycolnames,"d",max.diff, sep=".")
+    return(myx)
+  }
+}
+
+n <- length(myVariable)
+trend <- 1:n
+breaks <- 2
+lags <- 1
+model <- "break"
+myVariable.diff <- diffmatrix(myVariable, max.diff = 1, max.lag = 1)
+
+# Run the test once to determine the values for the break dates
+# Definition of all the options needed
+test.results.y <- ur.ls.bootstrap(y = myVariable, 
+                                  model = model, 
+                                  breaks = breaks, 
+                                  lags = lags, 
+                                  method = "GTOS",
+                                  pn = 0.1, 
+                                  critval = "bootstrap", 
+                                  print.results = "print")
+
+# Define variable Z, which is either Dt or DTt, depending on the model used
+# Create Dt and DTt, depending on the breaks, found in the initial application of the LS test
+
+# Define break dates
+myBreak1 <- test.results.y[[1]]$`First break`
+myBreak2 <- test.results.y[[1]]$`Second break`
+```
+
+```{r}
+# Dummy with break in intercept and in trend
+Dt1 <- as.matrix(cbind(trend, trend >= (myBreak1 + 1)))
+DTt1 <- as.matrix(cbind(Dt1, c(rep(0, myBreak1), 1:(n - myBreak1))))
+colnames(Dt1) <- c("Trend","D")
+colnames(DTt1) <- c("Trend","D","DTt")
+
+Dt2 <-  as.matrix(trend >= (myBreak2 + 1))
+DTt2 <- as.matrix(cbind(Dt2, c(rep(0, myBreak2), 1:(n - myBreak2))))
+colnames(Dt2) <- c("D2")
+colnames(DTt2) <- c("D2","DTt2")
+
+Dt <- cbind(Dt1)
+DTt <- cbind(DTt1)
+
+# Combine all Dummies into one big matrix to make it easier to include in the regressions
+if (breaks == 1) {
+  Dt <- cbind(Dt1)
+  DTt <- cbind(DTt1)
+} else if (breaks == 2) {
+  Dt <- cbind(Dt1, Dt2)
+  DTt <- cbind(DTt1, DTt2)
+}
+
+if(model == "crash"){
+  Z <- Dt
+} else if (model == "break"){
+  Z <- DTt
+}
+
+Z.diff <- diffmatrix(Z, max.diff = 1, max.lag = 1)
+#Matrix of coefficients, which omits the NA values
+myZcoef <- na.omit(coef(lm(myVariable.diff ~ Z.diff)))
+
+# delta_1 from equation (7) of Chou 2007, which is needed for the manual calculation of S.tilde according to Chou 2007
+# equivalent results to the calculation with the cumulated sum
+delta_1 <- myVariable[1] - (Z[1,] %*% myZcoef)
+
+#Result is equivalent to the original S.tilde
+myS.tilde <- myVariable - as.vector(delta_1) - Z %*% myZcoef
+if (model == "crash") {
+  y.star <- as.vector(delta_1) + as.vector((Dt %*% myZcoef)) + sample(myS.tilde, size = length(myS.tilde), replace = TRUE)
+} else if (model == "break") {
+  y.star <- as.vector(delta_1) + as.vector((DTt %*% myZcoef)) + sample(myS.tilde, size = length(myS.tilde), replace = TRUE)
+}
+```
+
+```{r}
+y.star <- as.vector(delta_1) + 
+  as.vector((DTt %*% myZcoef)) + 
+  sample(myS.tilde, size = length(myS.tilde), replace = TRUE)
+```
+
+```{r}
+as.Date(index(as.xts(y))[311])
+```
+
+```{r}
+n = 200
+u = rnorm(n)
+trd = 1:n
+sumu = cumsum(u)
+y = 10 + 0.3*trd + sumu
+plot(y)
+```
+
+```{r}
+cval.one.constant = matrix(c(-4.239, -3.566, -3.211), nrow = 1, ncol = 3, byrow = TRUE)
+colnames(cval.one.constant) <- c("1%","5%","10%")
+cval.one.constant
+```
+
+```{r}
+cval.one.crash = matrix(c(-4.239, -3.566, -3.211), nrow = 1, ncol = 3, byrow = TRUE)
+colnames(cval.one.crash) <- c("cv01", "cv05", "cv10")
+
+cval.one.break <- matrix(c(.1, -5.11, -4.50, -4.21,
+                           .2, -5.07, -4.47, -4.20,
+                           .3, -5.15, -4.45, -4.18,
+                           .4, -5.05, -4.50, -4.18,
+                           .5, -5.11, -4.51, -4.17,
+                           .6, -5.05, -4.50, -4.18,
+                           .7, -5.15, -4.45, -4.18,
+                           .8, -5.07, -4.47, -4.20,
+                           .9, -5.11, -4.50, -4.21),
+                         nrow = 9, ncol = 4, byrow = TRUE)
+colnames(cval.one.break) <- c("lambda1", "cv01", "cv05", "cv10")
+
+
+cval.two.crash = matrix(c(-4.545, -3.842, -3.504), nrow = 1, ncol = 3, byrow = TRUE)
+colnames(cval.two.crash) <- c("cv01", "cv05", "cv10")
+
+cval.two.break = matrix(c(.2, .4, -6.16, -5.59, -5.27,
+                          .2, .6, -6.41, -5.74, -5.32,
+                          .2, .8, -6.33, -5.71, -5.33,
+                          .4, .6, -6.45, -5.67, -5.31,
+                          .4, .8, -6.42, -5.65, -5.32,
+                          .6, .8, -6.32, -5.73, -5.32),
+                        nrow = 6, ncol = 5, byrow = TRUE)
+colnames(cval.two.break) <- c("lambda1", "lambda2", "cv01", "cv05", "cv10")
+```
+
+```{r}
+cval.one.trend[cval.one.trend[, 1] == 0.3, 2:4]
+```
+
+```{r}
+# y = price[, 1] %>% log()
+model <- "break"
+breaks <- 2
+lags <- 12
+
+test.results.y <- ur.ls.bootstrap(y = y, 
+                                  model = model, 
+                                  breaks = breaks, 
+                                  lags = lags, 
+                                  method = "GTOS",
+                                  pn = 0.1, 
+                                  critval = "theoretical", 
+                                  print.results = "print")
+
+test.results.y
+```
+
+```{r}
+library(interp)
+```
+
+```{r}
+p_load('pracma')
+```
+
+```{r}
+x <- c(0.5, 1, 2)
+y <- c(0.5, 1, 2)
+mgrid <- meshgrid(x, y)
+Z <- mgrid$X^2 + mgrid$Y^2
+# Z[2,1] <- NA
+# Z[3,1] <- NA
+# Z[3,2] <- NA
+xp <- yp <- linspace(-1, 1, 101)
+
+method <- "nearest"
+zp <- interp2(x, y, Z, 1.2, 1, method)
+zp
+```
+
+```{r}
+1.4**2 + 1
+```
+
+```{r}
+data(franke)
+plot(y ~ x, data = akima, main = "akima example data")
+with(akima, text(x, y, formatC(z,dig=2), adj = -0.1))
+
+## linear interpolation
+akima.li <- interp(akima$x, akima$y, akima$z)
+```
+
+```{r}
+x = 1:10
+y = 1:10
+z = x+y
+
+akima.li = interp(x, y, z)
+```
+
+```{r}
+example(interp)
+```
+
+```{r}
+# str(test.results.y)
+```
+
+```{r}
+ur.kpss(y)
+```
+
+```{r}
+args(ur.df)
+```
+
+```{r}
+test@cval
+```
+
+```{r}
+test = ur.df(y, type = "trend")
+summary(test)
+```
+
+```{r}
+summary(ur.pp(y))
+```
+
+```{r}
+colnames(boot.y) = c("t-stat","First break", "Second break", "Runtime")
+boot.y
+```
+
+```{r}
+#Loop for the actual boot strapping procedure
+model <- "break"
+breaks <- 2
+lags <- 1
+y.star <- as.vector(delta_1) + 
+  as.vector((Z %*% myZcoef)) + 
+  sample(myS.tilde, size = length(myS.tilde), replace = TRUE)
+
+boot.y <- foreach(i=1:20, .combine = rbind, .packages = 'foreach') %dopar%
+  test.stat <- ur.ls.bootstrap(y = y.star, 
+                               model = model, 
+                               breaks = breaks,
+                               lags = lags,
+                               method = "Fixed",
+                               pn = 0.1, 
+                               critval = "bootstrap", 
+                               print.results = "silent")
+  
+  if (breaks == 2) {
+    return(list(c(unlist(test.stat[[1]]$`t-stat`)), 
+                c(unlist(test.stat[[1]]$`First break`)),
+                c(unlist(test.stat[[1]]$`Second break`)),
+                c(as.numeric(test.stat[[1]]$Runtime, units = "mins")))
+          )
+  } else if (breaks == 1){
+    return(c(c(unlist(test.stat[[1]]$`t-stat`)), 
+             c(unlist(test.stat[[1]]$`First break`)), 
+             c(as.numeric(test.stat[[1]]$Runtime, units = "mins")))
+          )
+  }
+}
+```
+
+```{r}
+#Calculate the critical values, based on the distribution of the test statistic
+hist(unlist(boot.y[,"t-stat"]), freq = FALSE)
+quantile(unlist(boot.y[,"t-stat"]), c(.01, .05, .1, .25, .5, .75, .95, .99))
+quantile(unlist(boot.y[,"First break"]), c(.01, .05, .1, .25, .5, .75, .95))
+quantile(unlist(boot.y[,"Second break"]), c(.01, .05, .1, .25, .5, .75, .95))
+```
+
+```{r}
+hist(unlist(boot.y[,"First break"]), freq = FALSE)
+```
+
+<!-- #region toc-hr-collapsed=true toc-nb-collapsed=true -->
+# ทดสอบ Seasonal Unit Root
+<!-- #endregion -->
+
+## HEGY Test
+
+```{r}
+args(hegy.test)
+```
+
+```{r}
+test = hegy.test(y)
+names(test)
+```
+
+```{r}
+ur_hegy = function(y, n_diff = 0,
+                   spec = c("cts", "ct", "cs", "c"),
+                   max_lag = 12) {
+  
+  # 1 Set up
+  y = if (n_diff>0) diff(y, n_diff) %>% na.omit() else y %>% na.omit()
+  difference = paste0("d", n_diff)
+  
+  spec = match.arg(spec)
+  deterministic = case_when(
+    spec == "cts" ~ c(1,1,1),
+    spec == "ct"  ~ c(1,1,0),
+    spec == "cs"  ~ c(1,0,1),
+    spec == "c"   ~ c(1,0,0),
+  )
+  
+  # 2 Estimation
+  obj = hegy.test(y, 
+                  deterministic = deterministic, 
+                  maxlag = max_lag,
+                  lag.method = "AIC", 
+                  pvalue = "RS"
+                 )
+  
+  # 3 Report
+  tstat = obj$statistics
+  pval = obj$pvalues
+  nlag = obj$lag.order
+  
+  test_star = star_tstat(tstat, pval=pval)
+  names(test_star) = names(tstat)
+  
+  res = data.frame(difference, spec, nlag, t(test_star),
+                   stringsAsFactors = FALSE)
+  
+  return(res)
+}
+
+# test
+ur_hegy(y, spec = "cs")
+```
+
+```{r}
+report_test(price_log, 
+            ur_test = ur_hegy, 
+            differences = c(0, 12), 
+            specs = c("cts", "ct", "cs", "c")
+           ) -> table_hegy
+
+write.xlsx2(table_hegy, '../result/result_hegy.xlsx', row.names = FALSE)
+```
+
+```{r}
+table_hegy
+# table_hegy %>% kable() %>% as.character() %>% display_html()
+```
+
+## CH Test
+
+```{r}
+args(ch.test)
+```
+
+```{r}
+test = ch.test(y, type="trigonometric")
+names(test)
+```
+
+```{r}
+ur_ch = function(y, n_diff = 0,
+                 spec = c("lag1", "lag0"),
+                 max_lag = 12) {
+  
+  # 1 Set up
+  y = if (n_diff>0) diff(y, n_diff) %>% na.omit() else y %>% na.omit()
+  difference = paste0("d", n_diff)
+  
+  spec = match.arg(spec)
+  lag1 = case_when(
+    spec == "lag1" ~ TRUE,
+    spec == "lag0" ~ FALSE,
+  )
+  
+  # 2 Estimation
+  obj = ch.test(y, 
+                type = "trigonometric",
+                lag1 = lag1, 
+                NW.order = max_lag,
+                pvalue = "RS"
+               )
+  
+  # 3 Report
+  tstat = obj$statistics
+  names(tstat)= c("pi16", "pi26", "pi36", 
+                  "pi46", "pi56", "pi", "joint")
+  pval = obj$pvalues
+  nlag = obj$NW.order
+  
+  test_star = star_tstat(tstat, pval=pval)
+  names(test_star) = names(tstat)
+  
+  res = data.frame(difference, spec, nlag, t(test_star),
+                   stringsAsFactors = FALSE)
+  
+  return(res)
+}
+
+# test
+ur_ch(y, spec = "lag1")
+```
+
+```{r}
+report_test(price_log, 
+            ur_test = ur_ch, 
+            differences = c(0, 12), 
+            specs = c("lag1")
+           ) -> table_ch
+
+write.xlsx2(table_ch, '../result/result_ch.xlsx', row.names = FALSE)
+```
+
+```{r}
+table_ch
+```
+
+# ทดสอบ Unit Root
+
+
+## ADF
+
+```{r}
+args(ur.df)
+getSlots("ur.df")
+```
+
+```{r}
+ur_adf = function(y, n_diff = 0,
+                  spec = c("ct", "c", "n"),
+                  max_lag = 12) {
+  
+  # 1 Set up
+  y = if (n_diff>0) diff(y, n_diff) %>% na.omit() else y %>% na.omit()
+  difference = paste0("d", n_diff)
+  
+  spec = match.arg(spec)
+  type = case_when(
+    spec == "ct" ~ "trend",
+    spec == "c"  ~ "drift",
+    spec == "n"  ~ "none",
+  )
+  
+  # 2 Estimation
+  for (lag in rev(0:max_lag)) {
+    obj = ur.df(y, type = type, lags = lag, selectlags = "Fixed")
+    coef = obj@testreg$coefficients
+    if ( 0.05 > coef[nrow(coef), 4] ) break # test significant of the last lag
+  }
+  
+  # 3 Report
+  n_coef = (obj@'testreg'$'coefficients') %>% nrow()
+  model = obj@'model'
+  n_lag = case_when(
+    model == "none"  ~ n_coef-1,
+    model == "drift" ~ n_coef-2,
+    model == "trend" ~ n_coef-3,
+  )
+  
+  tstat = obj@'teststat' %>% t()
+  
+  cval = obj@'cval'
+  colnames(cval) = c('cv01', 'cv05', 'cv10')
+  
+  tau = tstat[1]
+  cval_tau  = cval[1,]
+  
+  phi = if(model != "none") tstat[nrow(tstat)] else NA
+  cval_phi = if(model != "none") cval[nrow(tstat),] else NA
+  
+  ADF_nlag = n_lag
+  ADF_tau = star_tstat(tau, cval_tau)
+  ADF_phi = star_tstat(phi, cval_phi)
+  
+  res = data.frame(difference, spec, ADF_nlag, ADF_tau, ADF_phi, 
+                   stringsAsFactors = FALSE)
+  
+  return(res)
+}
+
+# test
+ur_adf(y, spec = "ct", max_lag=12)
+```
+
+## PP
+
+```{r}
+args(ur.pp)
+getSlots("ur.pp")
+```
+
+```{r}
+ur_pp = function(y, n_diff = 0,
+                 spec = c("ct", "c"),
+                 lag_method = c("long", "short")) {
+  
+  # 1 Set up
+  y = if (n_diff>0) diff(y, n_diff) %>% na.omit() else y %>% na.omit()
+  difference = paste0("d", n_diff)
+  
+  spec = match.arg(spec)
+  model = case_when(
+    spec == "ct" ~ "trend",
+    spec == "c"  ~ "constant"
+  )
+  
+  lag_method = match.arg(lag_method)
+  
+  # 2 Estimation
+  obj = ur.pp(y, type = "Z-tau", model = model, lags = lag_method)
+  
+  # 3 Report
+  model = obj@'model'
+  n_lag = obj@'lag'
+  tstat = obj@'teststat'
+  cval = obj@'cval'
+  colnames(cval) = c('cv01', 'cv05', 'cv10')
+  cval = cval[1,]
+  
+  PP_nlag = n_lag
+  PP_zta = star_tstat(tstat, cval) # zta means Z-tau-alpha
+  
+  res = data.frame(difference, spec, PP_nlag, PP_zta, 
+                   stringsAsFactors = FALSE)
+
+  return(res)
+}
+
+# test
+ur_pp(y, spec="ct")
+```
+
+## DFGLS
+
+```{r}
+args(ur.ers)
+getSlots("ur.ers")
+```
+
+```{r}
+ur_dfgls = function(y, n_diff = 0,
+                    spec = c("ct", "c", "n"),
+                    max_lag = 12) {
+  
+  # 1 Set up
+  y = if (n_diff>0) diff(y, n_diff) %>% na.omit() else y %>% na.omit()
+  difference = paste0("d", n_diff)
+  
+  spec = match.arg(spec)
+  model = case_when(
+    spec == "ct" ~ "trend",
+    spec == "c"  ~ "constant",
+  )
+  
+  # 2 Estimation
+  for (lag in rev(0:max_lag)) {
+    obj = ur.ers(y, type = "DF-GLS", model = model, lag.max = lag) # model = "trend"
+    coef = obj@testreg$coefficients
+    if ( 0.05 > coef[nrow(coef), 4] ) break # test significant of the last lag
+  }
+  
+  # 3 Report
+  type = obj@'type'
+  model = obj@'model'
+  n_lag = obj@'lag'
+  tstat = obj@'teststat'
+  cval = obj@'cval'
+  colnames(cval) = c('cv01', 'cv05', 'cv10')
+  cval = cval[1,]
+  
+  DFGLS_nlag = n_lag
+  DFGLS_tau = star_tstat(tstat, cval)
+  
+  res = data.frame(difference, spec, DFGLS_nlag, DFGLS_tau, 
+                   stringsAsFactors = FALSE)
+
+  return(res)
+}
+
+# test
+ur_dfgls(y, spec = "c", max_lag=12)
+```
+
+## KPSS
+
+```{r}
+args(ur.kpss)
+getSlots("ur.kpss") # mu = constant tau = constant with trend
+```
+
+```{r}
+ur_kpss = function(y, n_diff = 0,
+                   spec = c("ct", "c"),
+                   lag_method = c("long", "short")) {
+  
+  # 1 Set up
+  y = if (n_diff>0) diff(y, n_diff) %>% na.omit() else y %>% na.omit()
+  difference = paste0("d", n_diff)
+  
+  spec = match.arg(spec)
+  type = case_when(
+    spec == "ct" ~ "tau",
+    spec == "c"  ~ "mu",
+  )
+  
+  lag_method = match.arg(lag_method)
+  
+  # 2 Estimation
+  obj = ur.kpss(y, type = type, lags = lag_method)
+  
+  # 3 Report
+  n_lag = obj@'lag'
+  tstat = obj@'teststat'
+  cval = obj@'cval'
+  colnames(cval) = c('cv10', 'cv05', 'cv025', 'cv01')
+  cval = cval[, c(4, 2, 1)] # rearrange
+  
+  KPSS_nlag = n_lag
+  KPSS_tau = star_tstat(tstat, cval) # zta means Z-tau-alpha
+  
+  res = data.frame(difference, spec, KPSS_nlag, KPSS_tau, 
+                   stringsAsFactors = FALSE)
+
+  return(res)
+}
+
+# test
+ur_kpss(y, spec="ct")
+```
+
+## All tests
+
+```{r}
+ur_tests = list(ur_adf, ur_dfgls, ur_pp, ur_kpss)
+
+lapply(ur_tests,
+       report_test, 
+       ys = price_log,
+       differences = c(0, 1), 
+       specs = c("ct", "c")
+      ) %>% reduce(merge) -> table_ur
+
+write.xlsx2(table_ur, '../result/result_ur.xlsx', row.names = FALSE)
+```
+
+```{r}
+table_ur
+# table_ur %>% kable() %>% as.character() %>% display_html() 
+# ur_result = ur_report(price)
+# write_csv(ur_result, '../result/unit_root_table.csv')
+# res_ch = uroot::ch.test(y, type ="dummy", pvalue = "raw")
+# res_hegy = uroot::hegy.test(y, deterministic = c(1,1,1), lag.method="AIC")
+```
+
+# ทดสอบ Cointegration
+
+```{r}
+args(ca.jo)
+getSlots("ca.jo")
+```
+
+```{r}
+ca_jo = function(data, include_dum = TRUE, type = 'trace',
+                 ecdet = 'trend', spec = 'transitory', ...) {
+  n_var = ncol(data) - 2
+  endo = data[, 1:n_var]
+  dum = data[, (n_var+1):ncol(data)]
+  dumvar = if(include_dum == TRUE) dum else NULL
+  
+  res = ca.jo(
+    x = endo,
+    type = type, 
+    ecdet = ecdet,
+    spec = spec,
+    dumvar = dum,
+    ...
+  )
+
+  return(res)
+}
+```
+
+```{r}
+ca_jo(rice_list[[1]])
+```
+
+```{r}
+result_cajo = rice_list %>%
+  map(ca_jo)
+```
+
+```{r}
+result_cajo %>% map(summary)
+```
+
+```{r}
+var_names = colnames(rice_list[[1]])
+dum_names = c('d_foodcrisis', 'd_pledge')
+var_names = var_names[!(var_names %in% dum_names)]
+```
+
+```{r}
+endo = rice_list[[1]][, var_names]
+dum = rice_list[[1]][, dum_names]
+```
+
+```{r}
+saveRDS(rice_list, '../data/rice/rice_price_list.rds')
+```
+
+```{r}
+ca.jo(
+  x = endo,
+  type ="trace", 
+  ecdet = "trend",
+  spec = 'transitory'
+) %>% summary()
+```
+
+```{r}
+ca.jo(
+  x = endo,
+  type ="trace", 
+  ecdet = "trend",
+  spec = 'transitory',
+  dumvar = dum
+) %>% summary()
+```
+
+```{r}
+result_cajo = rice_list %>%
+  map(
+    rice_list
+    ca.jo,
+    type ="trace", 
+    ecdet = "trend",
+    spec = 'transitory',
+    dumvar = 
+  )
+```
+
+```{r}
+result_cajo %>%
+  map(summary)
+```
+
+```{r}
+
+```

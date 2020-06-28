@@ -1,0 +1,349 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+# โหลด R packages
+
+```{r}
+source("../R/oaeTS.R", encoding = "UTF-8")
+year_now = 2563
+```
+
+# แปลงข้อมูลราคาเป็น long format
+
+
+## ราคาเกษตรกร (Farmgate price)
+รวมไฟล์ราคา แล้ว save เป็น RDS
+
+```{r}
+root = "../data/rice/farmgate/"
+
+rhfg = read_price_rice_fg(root, "rhfg.xlsx") %>% mutate(price_id = 'RHFG')
+rwfg = read_price_rice_fg(root, "rwfg.xlsx") %>% mutate(price_id = 'RWFG')
+rgfg = read_price_rice_fg(root, "rgfg.xlsx") %>% mutate(price_id = 'RGFG')
+
+rice_fg = rbind(rhfg, rwfg, rgfg) %>%
+  select(date, price_id, place, amount) %>%
+  filter(date < '2020-04-01')
+
+saveRDS(rice_fg, '../data/rice/rice_fg.rds')
+rice_fg
+```
+
+## ราคาขายส่ง (Wholesale price)
+รวมไฟล์ราคา แล้ว save เป็น RDS
+
+```{r}
+rice_ws = data.frame()
+for (i in 2545:year_now) {
+    df = read_price_rice_ws(i)
+    rice_ws = rbind(rice_ws, df)
+}
+
+saveRDS(rice_ws, '../data/rice/rice_ws.rds')
+rice_ws
+```
+
+## ราคาส่งออก (Export price)
+รวมไฟล์ราคา แล้ว save เป็น RDS
+
+```{r}
+rice_ex_th = data.frame()
+for (i in 2546:year_now){
+    df = suppressWarnings(read_price_rice_ex(i))
+    rice_ex_th = rbind(rice_ex_th, df)
+}
+
+saveRDS(rice_ex_th, '../data/rice/rice_ex_th.rds')
+rice_ex_th
+```
+
+## รวม ราคา 3 ตลาด
+
+```{r}
+rice_price = rbind(rice_fg, rice_ws, rice_ex_th)
+saveRDS(rice_price, '../data/rice/rice_price.rds')
+```
+
+```{r}
+rice_price = readRDS('../data/rice/rice_price.rds')
+rice_price
+```
+
+# แปลงข้อมูลราคาเป็น wide format
+
+
+## โหลด metadata
+
+```{r}
+tbl_admin_tha1 = read_excel("../data/tbl_admin_tha1.xlsx")
+tbl_admin_tha1
+```
+
+## ราคาเกษตรกร
+
+```{r}
+prices = c("RGFG_0", #"RGFG_1", "RGFG_2", "RGFG_3",
+           "RGFG_KK", "RGFG_SN", "RGFG_UN", "RGFG_KL", "RGFG_MS",
+           "RHFG_0", #"RHFG_1", "RHFG_2", "RHFG_3", 
+           "RHFG_SU", "RHFG_NR", "RHFG_UR", "RHFG_SI", "RHFG_BR",
+           "RWFG_0", #"RWFG_1", "RWFG_2", "RWFG_3", 
+           "RWFG_NS", "RWFG_PC", "RWFG_KP", "RWFG_SH", "RWFG_PS"
+          )
+
+rice_fg_wide = rice_price %>%
+  filter(endsWith(price_id, "FG")) %>%
+  mutate(HASC_1 = sapply(place,
+                         lookup,
+                         tbl_admin_tha1, 
+                         key = 'name_th1', 
+                         alt = 'name_alt',
+                         val = 'HASC_1',
+                         simplify = TRUE)
+        ) %>%
+  left_join(tbl_admin_tha1, by=c('HASC_1')) %>%
+  mutate(place_id = str_replace_all(HASC_1, "TH.", "")) %>%
+  mutate(price_id = paste(price_id, place_id, sep="_")) %>%
+  mutate(date = floor_date(date, "month")) %>%
+  filter(price_id %in% prices) %>%
+  pivot_wider(id_cols = date,
+              names_from = price_id,
+              values_from = amount,
+              values_fn = list(amount = mean)
+             )
+
+rice_fg_wide
+```
+
+## ราคาขายส่ง ราคาส่งออก
+
+```{r}
+prices = c("RHWS00BO", "RHWS00BN", # hommali rice wholesale
+           "RHXB00BO", "RHXB00BN", # hommali rice export
+           "RWWS05GO", "RWWS05GN", # white rice wholesale 
+           "RWXB05GU", # white rice export 
+           "RGWS10LO", "RGWS10LN", # glutinous wholesale
+           "RGXB10GF", "RGXB10GS", "RGXB10GU", "RGXB10LU" # glutinous export
+          )
+
+rice_price_wide = rice_price %>%
+  select(-place) %>%
+  filter(price_id %in% prices) %>%
+  filter(!is.na(date)) %>% # there are some missing date due to week
+  mutate(date = floor_date(date, "month")) %>%
+  mutate(price_id = substr(price_id, start = 1, stop = 4)) %>%
+  pivot_wider(id_cols = date,
+              names_from = price_id,
+              values_from = amount,
+              values_fn = list(amount = mean)
+             )
+
+rice_price_wide = rice_fg_wide %>% left_join(rice_price_wide, by="date")
+rice_price_wide
+```
+
+# เพิ่ม dummy variables
+
+```{r}
+# dummy years ช่วงวิกฤตอาหารครั้งที่ 1
+start_foodcrisis = as.Date('2008/1/1')
+end_foodcrisis = as.Date('2008/6/1')
+
+# dummy years ช่วงนโยบายจำนำข้าวทุกเมล็ดของ นายก ยิ่งลักษณ์
+start_pledge = as.Date('2011/10/1')
+end_pledge = as.Date('2014/02/1')
+```
+
+```{r}
+rice_price_wide = rice_price_wide %>%
+  mutate(d_foodcrisis = ifelse(date >= start_foodcrisis & 
+                               date <= end_foodcrisis, 1, 0)) %>%
+  mutate(d_pledge = ifelse(date >= start_pledge & 
+                               date <= end_pledge, 1, 0))
+
+saveRDS(rice_price_wide, '../data/rice/rice_price_tidy.rds')
+rice_price_wide
+```
+
+# จัดการ missing values
+
+```{r}
+price = readRDS('../data/rice/rice_price_tidy.rds')
+price_ts = price %>% select(-date) %>% ts(start = 1989, freq = 12)
+price_xts = column_to_rownames(price, var = "date") %>% as.xts()
+# price_fg = rice_fg_wide %>% 
+#   column_to_rownames(var = "date") %>% as.xts()
+```
+
+```{r}
+sapply(price_ts, function(x) sum(!is.na(x)))
+```
+
+## ข้าวหอมมะลิ
+ข้าวหอมมะลิ อุบล เริ่มตั้งแต่ปี มค 1997
+
+```{r}
+cols = colnames(price_ts)[startsWith(colnames(price_ts), 'RH')]
+p_rice = price_ts[, cols]
+set_figsize(12, 8)
+par(mfrow=c(4, 1))
+for (i in 1:ncol(p_rice)) {
+  plotNA.distribution(p_rice[,i], main=colnames(p_rice)[i])
+}
+```
+
+## ข้าวเจ้าอื่น
+2. ข้าวเจ้าขาว ราคารายจังหวัดเริ่มตั้งแต่ปี ธค 2006
+3. ข้าวเเหนียว กาฬสินธุ์เริ่มตั้งแต่ปี มค 1997
+
+```{r}
+cols = names(price_xts)[startsWith(names(price_xts), 'RW')]
+p_rice = price_xts[, cols]
+set_figsize(12, 8)
+par(mfrow=c(4, 1))
+for (i in 1:ncol(p_rice)) {
+  plotNA.distribution(p_rice[,i], main=names(p_rice)[i])
+}
+```
+
+## ข้าวเหนียว
+
+```{r}
+cols = names(price_xts)[startsWith(names(price_xts), 'RG')]
+p_rice = price_xts[, cols]
+set_figsize(12, 8)
+par(mfrow=c(4, 1))
+for (i in 1:ncol(p_rice)) {
+  plotNA.distribution(p_rice[,i], main=names(p_rice)[i])
+}
+```
+
+```{r}
+price_ts_filled = na_kalman(price_ts, model = "auto.arima", maxgap = 12)
+saveRDS(price_ts_filled, '../data/rice/rice_price_filled.rds')
+tail(price_ts_filled)
+```
+
+# กราฟ
+
+```{r}
+data = rice_price %>%
+    filter(year(date)>2002) %>%
+    filter((place=='เฉลี่ยทั้งประเทศ' & price_id=='RHFG') |
+           price_id=='RHWS00BO' | price_id=='RHXB00BO'
+          )
+
+g = ggplot(data, aes(date, amount, colour=price_id)) +
+    geom_line() + xlab("") + ylab("price") +
+    scale_color_tableau() + 
+    theme_light()
+ggplotly(g)
+```
+
+# Backup
+
+```{r}
+# rice_fg_wide = rice_price %>%
+#   filter(grepl('FG', price_id)) %>%
+#   filter(!is.na(amount)) %>%
+#   filter(!is.na(date)) %>%
+#   left_join(tbl_admin_tha1, by=c("place" = "name_oae1")) %>%
+#   mutate(place_id = str_replace_all(HASC_1, "TH.", "")) %>%
+#   mutate(new_price_id=paste(price_id, place_id, sep="_")) %>%
+#   mutate(month = floor_date(date, "month")) %>%
+#   filter(new_price_id %in% prices) %>%
+#   select(month, place, new_price_id, amount) %>%
+#   group_by(month, new_price_id) %>%
+#   summarise(amount = mean(amount)) %>%
+#   spread(new_price_id, amount)
+
+# write.xlsx(rice_price_wide, '../data/rice/rice_price_wide.xlsx')
+```
+
+```{r}
+# prices = c("RHWS00BO", "RHWS00BN", # hommali rice wholesale
+#            "RHXB00BO", "RHXB00BN", # hommali rice export
+#            "RWWS05GO", "RWWS05GN", # white rice wholesale 
+#            "RWXB05GU", # white rice export 
+#            "RGWS10LO", "RGWS10LN", # glutinous wholesale
+#            "RGXB10GF", "RGXB10GS", "RGXB10GU", "RGXB10LU" # glutinous export
+#           )
+
+# rice_price_wide = rice_price %>%
+#     select(-place) %>%
+#     filter(price_id %in% prices) %>%
+#     filter(!is.na(date)) %>%
+#     mutate(month = floor_date(date, "month")) %>%
+#     mutate(new_price_id = substr(price_id,start = 1, stop = 4)) %>%
+#     group_by(month, new_price_id) %>%
+#     summarise(amount = mean(amount)) %>%
+#     spread(new_price_id, amount) %>%
+#     right_join(rice_fg_wide, by="month")
+```
+
+```{r}
+check <- rice_price %>%
+    filter(grepl('FG', price_id)) %>%
+    mutate(count = !is.na(amount)) %>%
+    group_by(place, price_id) %>%
+    summarise(sum = sum(count)) %>%
+    spread(price_id, sum)
+
+write.xlsx(check, '../data/rice/check.xlsx')
+```
+
+# สร้างตารางอธิบายชื่อ ข้อมูลราคา (`tbl_rice_price`)
+
+```{r}
+# library(rio)
+# data_list <- import_list("../data/data_dict.xlsx")
+
+# A <- data_list$aa['aa']
+# B <- data_list$bb['bb']
+# C <- data_list$cc['cc']
+# D <- data_list$d['d']
+# E <- data_list$e['e']
+
+# price_id_names <- unique(rice_price$price_id)
+
+# tbl_rice_price <- crossing(A,B,C,D,E) %>% 
+#     mutate(price_id = pmap_chr(., paste, sep="")) %>%
+#     mutate(price_id = str_replace_all(price_id, "Z", "")) %>%
+#     filter(price_id %in% price_id_names)
+
+# tbl_rice_price <- tbl_price_rice %>%
+#     left_join(data_list$aa) %>%
+#     left_join(data_list$bb) %>%
+#     left_join(data_list$cc) %>%
+#     left_join(data_list$d) %>%
+#     left_join(data_list$e) %>%
+#     unite(price_name, c(aa_name, bb_name, cc_name, d_name, e_name), sep = " ", remove = FALSE) %>%
+#     unite(price_name_th, c(aa_name_th, bb_name_th, cc_name_th, d_name_th, e_name_th), sep = " ", remove = FALSE) %>%
+#     mutate(price_name = str_replace_all(price_name, "NA", "")) %>% 
+#     mutate(price_name_th = str_replace_all(price_name_th, "NA", ""))
+
+# write.xlsx(tbl_rice_price, '../data/rice/tbl_rice_price.xlsx')
+```
+
+```{r}
+# count_by_price_id <- rice_price %>%
+#     group_by(price_id) %>%
+#     summarize(sum(!is.na(amount))) %>%
+#     left_join(tbl_rice_price)
+# write.xlsx(count_by_price_id, '../data/rice/count_by_price_id.xlsx')
+```
+
+```{r}
+# write.xlsx(unique(rice_fg$place), 'changwat.xlsx')
+```
