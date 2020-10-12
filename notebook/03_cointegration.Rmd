@@ -30,7 +30,7 @@ price = readRDS('../data/rice/rice_price_list.rds')
 ```
 
 ```{r}
-# head(price)
+str(price)
 ```
 
 ```{r}
@@ -82,14 +82,11 @@ x$rfg = list(endo = price$rfg[, 1:3], exo = price$rfg[, 4:5])
     * Serial Autocorrelation
     * Heteroskedasticity
     * Normality
-  - Stability Analysis
 3. Analysis
   - Interpret
   - Test economic theory
-  - Forecast
   - Granger Causality
   - IRF
-  - FEVD
 
 
 # Vertical PT: Hommali Rice
@@ -104,8 +101,16 @@ summary(endo %>% exp())
 ```
 
 ```{r}
-set_figsize(10, 6)
+# set_figsize(10, 6)
+filename = paste0("../img/plot_", 'rh', ".png")
+png(filename = filename,
+  units = "in", 
+  width = 12, 
+  height = 6, 
+  pointsize = 10, 
+  res = 300)
 plot.ts(endo)
+dev.off()
 ```
 
 ```{r}
@@ -133,11 +138,27 @@ ur.df(endo[, 3], 'none', lags = 12, selectlags = 'AIC')
 ur.df(endo[, 1], 'none', lags = 12, selectlags = 'AIC')@cval
 ```
 
-## Model Selection
+```{r}
+var.rh = VAR(endo[, c(1,2)], lag.max=12, type = 'both')
+```
 
 ```{r}
-VARselect(endo, lag.max = 4, type = 'none', exogen = exo)
+apt::ecmSymFit(endo[, 1], endo[, 2])
 ```
+
+```{r}
+causality(var.rh, cause = 'RHWS')
+```
+
+```{r}
+causality(var.rh, cause = 'RHXB')
+```
+
+```{r}
+causality(var.rh, cause = '')
+```
+
+## Model Specification
 
 ```{r}
 VARselect(endo, lag.max = 4, type = 'const', exogen = exo)
@@ -148,13 +169,21 @@ VARselect(endo, lag.max = 4, type = 'both', exogen = exo)
 ```
 
 ```{r}
+var.rh = VAR(endo, lag.max = 4, type = 'const', exogen = exo)
+```
+
+```{r}
+# causality(var.rh, cause = 'RHFG')
+```
+
+```{r}
 vecm_rh.trace = ca.jo(
-  x$rh$endo, type = 'trace', ecdet = 'trend', K = 2, 
+  x$rh$endo, type = 'trace', ecdet = 'const', K = 2,
   spec = 'transitory', dumvar = x$rh$exo
 )
 
 vecm_rh.eigen = ca.jo(
-  x$rh$endo, type = 'eigen', ecdet = 'trend', K = 2, 
+  x$rh$endo, type = 'eigen', ecdet = 'const', K = 2, 
   spec = 'transitory', dumvar = x$rh$exo
 )
 
@@ -165,94 +194,131 @@ summary(vecm_rh.eigen)
 r = 2
 
 ```{r}
-vecm_rh = cajorls(vecm_rh.trace, r = 2)
+vecm_rh = cajorls(vecm_rh.trace, r = 1)
 ```
 
 ```{r}
-args(VAR)
+
 ```
 
 ```{r}
-var1 = VAR(x$rh$endo , p = 1 , type = 'both', exogen = x$rh$exo)
-var2 = VAR(x$rh$endo , p = 2 , type = 'both', exogen = x$rh$exo)
+vecm_rh$rlm %>% summary()
 ```
 
-```{r}
-serial.test(var2, lags.pt = 12, type = 'PT.asymptotic')
-```
-
-```{r}
-arch.test(var2, lags.multi = 12)
-```
-
-```{r}
-normality.test(var2)
-```
+## Model Testing
 
 ```{r}
 var_rh = vec2var(vecm_rh.trace)
-serial.test(var_rh, lags.pt = 12, type = 'PT.asymptotic')
-arch.test(var_rh, lags.multi = 12)
-normality.test(var_rh)
+serial1 = serial.test(var_rh, lags.pt = 12, type = 'PT.asymptotic')
+arch1 = arch.test(var_rh, lags.multi = 12)
+norm1 = normality.test(var_rh)
+
+serial1$serial
+arch1$arch.mul
+norm1$jb.mul$JB
 ```
 
 ## Test Law of One Price
 
 ```{r}
-head(x$rh$endo)
-```
-
-```{r}
-data(Canada)
-var.2c <- VAR(Canada, p = 2, type = "const")
-causality(var.2c, cause = "e")
-```
-
-```{r}
 H1 = ca.jo(
-  x$rh$endo, type = 'trace', ecdet = 'none', K = 2, 
+  x$rh$endo, type = 'trace', ecdet = 'const', K = 2, 
   spec = 'transitory', dumvar = x$rh$exo
 )
 H1 %>% summary()
 ```
 
 ```{r}
-H3 = matrix(c(1, -1, -1), nrow = 3, ncol = 1)
+HA = matrix(c( 1, 0, 0,
+               0, 1, 0,
+              -1, 0, 0,
+               0, 0, 1
+             ), 
+            ncol = 3, byrow = TRUE)
 
-# H5 = matrix(c(1, -1, -1))
-# Hlop = matrix(c(1, -1, -1), nrow = 3, ncol = 1)
-
-bh5lrtest(z = H1, H = H3, r = 2) %>% summary()
+blrtest(z = vecm_rh.trace, H = HA, r = 1) %>% summary()
 ```
 
 ```{r}
-mat_lop = matrix(c(1, -1, 0, 0), 
-                 nrow = 4, ncol = 1)
-
-blrtest(z = vecm_rh.trace, H = mat_lop, r = 2)
+save_irf_plot = function(model, impulse, width = 6, height = 8, n.ahead = 12) {
+  model_name = deparse(substitute(model))
+  filename = paste0("../img/irf_", model_name, '_', impulse, ".png")
+  png(filename = filename,
+    units = "in", 
+    width = width, 
+    height = height,
+    pointsize = 10, 
+    res = 300)
+  plot(irf(model, impulse = impulse, n.ahead = n.ahead))
+  dev.off()
+}
 ```
 
 ```{r}
-options(
-  repr.plot.width=10, 
-  repr.plot.height=10, 
-  repr.plot.res = 300
-)
+save_irf_plot(var_rh, 'RHFG')
+save_irf_plot(var_rh, 'RHWS')
+save_irf_plot(var_rh, 'RHXB')
 ```
 
 ```{r}
-plot(irf(var_rh, impulse = "RHFG")) 
+TVECM.HStest(endo[, c(1,3)])
+```
+
+```{r}
+# TVECM(endo[, c(1,3)], common = 'only_ECT', include = 'const') %>% summary()
+```
+
+```{r}
+# tsDyn::VECM(endo, lag = 1, r = 2, estim = "ML",
+#             include = 'const', exogen = exo) %>% summary()
 ```
 
 # Horizontal : Hommali Rice
 
 ```{r}
-H1 = ca.jo(
-  x$rwfg$endo[, c(1,2,3,4,5)], type = 'trace', ecdet = 'none', K = 2, 
-  spec = 'transitory', dumvar = x$rwfg$exo
-)
-H1 %>% summary()
+endo = x$rhfg$endo
+exo = x$rhfg$exo
 ```
+
+```{r}
+summary(endo %>% exp())
+```
+
+```{r}
+# set_figsize(10, 6)
+filename = paste0("../img/plot_", 'rhfg', ".png")
+png(filename = filename,
+  units = "in", 
+  width = 12, 
+  height = 6, 
+  pointsize = 10, 
+  res = 300)
+plot.ts(endo)
+dev.off()
+```
+
+## Model Specification
+
+```{r}
+VARselect(endo, lag.max = 4, type = 'const', exogen = exo)
+```
+
+```{r}
+vecm.trace = ca.jo(
+  endo, type = 'trace', ecdet = 'const', K = 2,
+  spec = 'transitory', dumvar = exo
+)
+
+vecm.eigen = ca.jo(
+  endo, type = 'eigen', ecdet = 'const', K = 2, 
+  spec = 'transitory', dumvar = exo
+)
+
+summary(vecm.trace)
+summary(vecm.eigen)
+```
+
+### Law of One Price
 
 ```{r}
 HA = matrix(c( 1, 1, 1, 1,
@@ -272,25 +338,6 @@ blrtest(z = H1, H = HA, r = 4) %>% summary()
 # Hlop = matrix(c(1, -1, -1), nrow = 3, ncol = 1)
 
 # bh5lrtest(z = H1, H = H5, r = 1) %>% summary()
-```
-
-```{r}
-
-```
-
-```{r}
-data(denmark)
-sjd <- denmark[, c("LRM", "LRY", "IBO", "IDE")]
-sjd.vecm <- ca.jo(sjd, ecdet="const", 
-                  type="trace", K=2, 
-                  spec="transitory", season=4)
-HD0 <- matrix(c(1, -1, -1, -1, -1), c(5,1))
-blrtest(sjd.vecm, H=HD0, r=1)
-# summary(blrtest(sjd.vecm, H=HD0, r=1))
-```
-
-```{r}
-
 ```
 
 ```{r}
