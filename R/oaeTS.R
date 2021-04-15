@@ -4,16 +4,16 @@ if (!require("pacman")) install.packages("pacman")
 pkgs = c('plotly', 'ggthemes', 'hrbrthemes', 'IRdisplay', 
          'lubridate', 'xts', 'tsbox', 'imputeTS',
          'urca', 'uroot', 'vars', 'forecast', 'dynlm', 'tsDyn',
-         'kableExtra', 'gt', 'reshape2', 'readxl', 'xlsx', 'tidyverse'
+         'kableExtra', 'gt', 'reshape2', 'readxl', 'writexl', 'tidyverse'
         )
 
 pacman::p_load(pkgs, character.only=TRUE)
 
 set_figsize = function (width, height){
   options(
-	repr.plot.width=width,
-	repr.plot.height=height
-	)
+    repr.plot.width=width,
+    repr.plot.height=height
+  )
 }
 
 ### Data Manipluation ###
@@ -41,7 +41,7 @@ read_price_rice_fg = function(root, filename) {
   for (i in sheets){
     dt =
       read_excel(path, skip=3, sheet=paste(i), na = c("-","",0)) %>%
-      pivot_longer(-1, names_to='month_th', values_to='amount') %>%
+      pivot_longer(-1, names_to='month_th', values_to='value') %>%
       filter(month_th %in% names(months_th)) %>%
       mutate(year = as.numeric(i) - 543) %>%
       mutate(month = months_th[month_th]) %>%
@@ -60,8 +60,7 @@ read_price_rice_fg = function(root, filename) {
 }
 
 
-read_price_rice_ws = function(year) {
-  root = '../data/rice/wholesale/ws'
+read_price_rice_ws = function(root, year) {
   path = paste0(root, year, '.xls')
   sheets = tolower(month.abb)
   data = data.frame()
@@ -117,8 +116,8 @@ get_friday = function(year){
 }
 
 
-read_price_rice_ex = function(year){
-  path = paste0('../data/rice/export_th/ex', year, '.xlsx')
+read_price_rice_ex = function(root, year){
+  path = paste0(root, year, '.xlsx')
   sheets = tolower(month.abb)
   data = data.frame()
   fridays = get_friday(year-543)

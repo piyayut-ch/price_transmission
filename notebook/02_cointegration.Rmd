@@ -1,0 +1,1389 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.9.1
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+# Setup
+
+## Load libraries
+
+```{r}
+if (!require("xfun")) install.packages("xfun")
+
+pkgs <- c(
+  'urca', 'uroot', 'vars', 'forecast', 'dynlm', 'tsDyn', "aod", 
+  'lubridate', 'tsbox', 'timetk', 'xts', 'tsibble', 'mltools',
+  'tidyverse', 'readr', 'vroom', 'readxl', 'writexl', 
+  'rlist', 'here', 'forcats', "janitor", 'data.table', 
+  'extrafont', 'patchwork', 'hrbrthemes', 'ggthemes', 'ggsci', 'scales',
+  'kableExtra', 'gt', 'reshape2'
+)
+xfun::pkg_attach2(pkgs, message = TRUE)
+
+loadfonts(device = "win", quiet = TRUE)
+setwd(here())
+
+# source("R/granger_ty.R")
+source("R/tsa.R")
+```
+
+## Load data
+
+```{r}
+price <- readRDS('data/rice/clean/rice_price.rds') %>%
+  filter(date >= '2004-01-01') %>%
+  mutate(
+    across(phf:pwx, log),
+    month = factor(month(date))
+  )
+
+price <- one_hot(as.data.table(price)) %>% 
+  as_tsibble(index = date) %>% 
+  select(-month_12)
+
+price
+```
+
+```{r}
+# price <- price %>%
+#   mutate(
+#     d_foodcrisis = ifelse(date >= '2007-11-01' & date <= '2008-06-01', 1, 0),
+#     d_pledge = ifelse(date >= '2011-09-01' & date <= '2014-01-01', 1, 0)
+#   )
+```
+
+# Hommali
+
+```{r}
+endo_h <- price %>% as_tibble() %>% select(phf, phw, phx)
+exo_h  <- price %>% as_tibble() %>% select(d_foodcrisis, d_pledge, starts_with("month"))
+```
+
+## Descriptive Analysis
+
+```{r}
+endo_h %>% exp() %>%
+  psych::describe() %>%
+  rownames_to_column("varname") %>%
+  select(varname, mean, sd, min, max) %>%
+  write_xlsx("results/tbl_1_desc_h.xlsx")
+```
+
+```{r}
+options(
+  repr.plot.width = 10,
+  repr.plot.height = 6 
+)
+
+price %>% 
+  ggplot(aes(x=date)) +
+    geom_line( aes(y=phf %>% exp(), color = 'เกษตรกรขายได้')) +
+    geom_line( aes(y=phw %>% exp(), color = 'ขายส่ง')) +
+    geom_line( aes(y=phx %>% exp(), color = 'ส่งออก')) +
+    scale_color_d3() +
+    expand_limits(y = 0) +
+    scale_y_continuous(label = comma) +
+    labs(title = 'ราคาข้าวหอมมะลิ 3 ตลาด',
+         x =  "ปี",
+         y = 'บาท/ตัน'
+        ) +
+    theme_ipsum(
+      base_size = 16,
+      base_family = "Athiti Light",
+      axis_title_size = 16
+    ) +
+    theme(
+      legend.position = c(1, 1),
+      legend.direction = 'horizontal',
+      legend.justification = 'right',
+      legend.title = element_blank()
+    ) +
+    scale_x_date(date_breaks = '2 years',
+                 labels = function(x) year(x)+543
+                 )
+
+# ggsave('figures/fig_1_h.png', width = 10, height = 6)
+```
+
+## Unit Root Test
+
+```{r}
+# urca::ur.df(
+#   price %>% select('pwx') %>% ts_ts %>% diff(), 
+#   type = 'drift') %>% summary
+```
+
+```{r}
+ph_names <- c('phf', 'phw', 'phx')
+
+expand_grid(
+  'varname' = ph_names, 
+  'n_diff' = c(0,1)
+) %>% 
+  pmap(tsa_ur_adf, y = price, specs = c('trend', 'drift')) %>%
+  reduce(bind_rows) %>% 
+  tsa_report_adf() %>% 
+  write_xlsx("results/tbl_2_unit_root_h.xlsx")
+```
+
+## Optimal Lag
+
+```{r}
+varselect <- VARselect(endo_h, exogen = exo_h, lag.max = 10, type = 'both')
+varselect
+```
+
+```{r}
+varselect$criteria %>% t %>% 
+  as_tibble %>% 
+  rownames_to_column('lag') %>%
+  write_xlsx("results/tbl_3_optimal_lag_h.xlsx")
+```
+
+## Deterministic Term
+
+```{r}
+tsa_select_DT <- function(endo, ...) {
+  
+  # estimate 5 specification of VECM
+  
+  spec1 <- tsDyn::VECM(endo, estim = "ML", include = 'none', ...) %>% suppressWarnings()
+  spec2 <- tsDyn::VECM(endo, estim = "ML", LRinclude = 'const', ...) %>% suppressWarnings()
+  spec3 <- tsDyn::VECM(endo, estim = "ML", include = 'const', ...) %>% suppressWarnings()
+  spec4 <- tsDyn::VECM(endo, estim = "ML", include = 'const', LRinclude = 'trend', ...) %>% suppressWarnings()
+  spec5 <- tsDyn::VECM(endo, estim = "ML", include = 'both', ...) %>% suppressWarnings()
+  
+  res <- list(spec1, spec2, spec3, spec4, spec5)
+  tibble(
+    model = 1:length(res),
+    AIC = res %>% map_dbl(AIC),
+    BIC = res %>% map_dbl(BIC)
+  )
+}
+
+tsa_select_DT(endo_h, exogen = exo_h, lag = 1) %>%
+  write_xlsx("results/tbl_a1_model_spec.xlsx")
+```
+
+## Cointegration Test
+
+```{r}
+vecm_h <- tsDyn::VECM(
+  endo_h, exogen = exo_h, lag = 1,
+  estim = "ML", LRinclude = 'const',
+  ) %>% suppressWarnings()
+```
+
+```{r}
+summary(vecm_h)$coefMat %>% as.data.frame %>% 
+  rownames_to_column() %>%
+  write_xlsx("results/vecm_ph.xlsx")
+```
+
+```{r}
+vecm_h <- tsDyn::VECM(
+  endo_h, exogen = exo_h, lag = 1,
+  estim = "ML", LRinclude = 'const',
+  ) %>% suppressWarnings()
+
+rank.test(vecm_h) %>% summary() %>%
+  select(-trace_pval_T) %>%
+  write_xlsx("results/tbl_4_rank_test.xlsx")
+```
+
+## VECM
+
+```{r}
+vecm_h <- tsDyn::VECM(
+  endo_h, exogen = exo_h, lag = 1, r = 2,
+  estim = "ML", LRinclude = 'const',
+  ) %>% suppressWarnings()
+```
+
+```{r}
+vecm_h %>% summary
+```
+
+```{r}
+vecm_h$model.specific$beta
+```
+
+```{r}
+# vecm_h %>% summary %>% suppressWarnings()
+```
+
+```{r}
+vecm_h %>% 
+  summary %>% suppressWarnings() %>% 
+  '[['('bigcoefficients') %>% 
+  t %>% 
+  as.data.frame %>%
+  rownames_to_column() %>%
+  write_xlsx("results/tbl_5_vecm_h.xlsx")
+```
+
+```{r}
+# vecm_h_cajo <- ca.jo(endo_h, dumvar = exo_h, ecdet = "const", type="eigen", K=2, spec="transitory")
+# vecm_h_ols <- cajools(vecm_h_cajo)
+# vecm_h_ols %>% summary()
+```
+
+### Test
+
+```{r}
+vecm_h_var <- tsDyn:::vec2var.tsDyn(vecm_h)
+tsa_VAR_diag(vecm_h_var) %>%
+  write_xlsx("results/tbl_a2_model_diag_h.xlsx")
+```
+
+```{r}
+bound_unit_circle <- function(x) {
+  x <- ifelse(x > 1, 1, x)
+  x <- ifelse(x < -1, -1, x)
+  return(x)
+}
+
+# bound_unit_circle(Re(eigen(vecm_h_var$A$A1)$values))
+```
+
+```{r}
+library("plotrix")
+
+options(
+  repr.plot.width = 6,
+  repr.plot.height = 6 
+)
+
+png(
+  filename = "figures/fig_a1_stability_h.png",
+  units = "in", 
+  width = 6, 
+  height = 6,
+  pointsize = 10, 
+  res = 300
+)
+
+x <- seq(-1, 1, length = 1000)
+y1 <- sqrt(1-x^2)
+y2 <- -sqrt(1-x^2)
+plot(
+  Re(eigen(vecm_h_var$A$A1)$values) %>% bound_unit_circle,
+  Im(eigen(vecm_h_var$A$A1)$values) %>% bound_unit_circle,
+  pch=19, col = "blue", 
+  xlab = 'Real part', ylab = 'Complex part',
+  ylim = c(-2, 2), xlim = c(-2, 2)
+)
+points(
+  Re(eigen(vecm_h_var$A$A2)$values) %>% bound_unit_circle,
+  Im(eigen(vecm_h_var$A$A2)$values) %>% bound_unit_circle,
+  pch=19, col = "blue"
+)
+abline(h=0)
+abline(v=0)
+draw.circle(0, 0, 1, nv = 1000, border = NULL, col = NA, lty = 1, lwd = 1)
+
+dev.off()
+```
+
+## Granger Casuality Test
+
+```{r}
+tsa_gc_ty(
+  endo_h, exogen = exo_h, 
+  p=1, m=1, type = "const"
+) %>% select(-wald)
+```
+
+```{r}
+tsa_gc_ty(
+  endo_h, exogen = exo_h, 
+  p=1, m=1, type = "const"
+) %>% 
+  select(-wald) %>%
+  mutate(chi2_pval = round(chi2_pval, 5)) %>%
+  write_xlsx("results/tbl_a3_granger_h.xlsx")
+```
+
+## IRF
+
+```{r}
+vecm_h <- tsDyn::VECM(
+  endo_h %>% select(1,2,3), exogen = exo_h, lag = 1, r = 2,
+  estim = "ML", LRinclude = 'const',
+  ) %>% suppressWarnings()
+```
+
+```{r}
+# tsDyn::irf(vecm_h, boot = TRUE, n.ahead = 36, ortho = TRUE)
+```
+
+```{r}
+for (i in c("phf", "phw", "phx")) {
+  png(
+    filename = glue::glue("figures/fig_3_irf1_{i}.png"),
+    units = "in", 
+    width = 7, 
+    height = 7,
+    pointsize = 12, 
+    res = 300
+  )
+  tsDyn::irf(vecm_h, impulse = i, boot = TRUE, n.ahead = 24, ortho = TRUE) %>% plot
+  dev.off()  
+}
+```
+
+# White Rice
+
+```{r}
+endo_w <- price %>% as_tibble() %>% select(pwf, pww, pwx)
+exo_w  <- price %>% as_tibble() %>% select(d_foodcrisis, d_pledge)
+```
+
+```{r}
+
+```
+
+## Descriptive Analysis
+
+```{r}
+endo_w %>% exp() %>%
+  psych::describe() %>% 
+  rownames_to_column("varname") %>%
+  select(varname, mean, sd, min, max) %>%
+  write_xlsx("results/tbl_1_desc_w.xlsx")
+```
+
+```{r}
+options(
+  repr.plot.width = 10,
+  repr.plot.height = 6 
+)
+
+price %>% 
+  ggplot(aes(x=date)) +
+    geom_line( aes(y=pwf %>% exp(), color = 'เกษตรกรขายได้')) +
+    geom_line( aes(y=pww %>% exp(), color = 'ขายส่ง')) +
+    geom_line( aes(y=pwx %>% exp(), color = 'ส่งออก')) +
+    scale_color_d3() +
+    expand_limits(y = 0) +
+    scale_y_continuous(label = comma) +
+    labs(title = 'ราคาข้าวเจ้าขาว 3 ตลาด',
+         x =  "ปี",
+         y = 'บาท/ตัน'
+        ) +
+    theme_ipsum(
+      base_size = 16,
+      base_family = "Athiti Light",
+      axis_title_size = 16
+    ) +
+    theme(
+      legend.position = c(1, 1),
+      legend.direction = 'horizontal',
+      legend.justification = 'right',
+      legend.title = element_blank()
+    ) +
+    scale_x_date(date_breaks = '2 years',
+                 labels = function(x) year(x)+543
+                 )
+
+ggsave('figures/fig_1_w.png', width = 10, height = 6)
+```
+
+## Unit Root Test
+
+```{r}
+p_w_names <- c('pwf', 'pww', 'pwx')
+
+expand_grid(
+  'varname' = p_w_names, 
+  'n_diff' = c(0,1)
+) %>% 
+  pmap(tsa_ur_adf, y = price) %>%
+  reduce(bind_rows) %>% 
+  tsa_report_adf() %>% 
+  write_xlsx("results/tbl_2_unit_root_w.xlsx")
+```
+
+## Optimal Lag
+
+```{r}
+varselect <- VARselect(endo_w, exogen = exo_w, lag.max = 10, type = 'both')
+varselect
+```
+
+```{r}
+varselect$criteria %>% t %>% 
+  as_tibble %>% 
+  rownames_to_column('lag') %>%
+  write_xlsx("results/tbl_3_optimal_lag_w.xlsx")
+```
+
+```{r}
+VAR(endo_w, exogen = exo_w, p = 2, type = "both") %>% tsa_VAR_diag
+```
+
+## Test
+
+```{r}
+VAR(endo_w, exogen = exo_w, p = 2, type = "both") %>% 
+  tsa_VAR_diag %>%
+  write_xlsx("results/tbl_a2_model_diag_w2.xlsx")
+```
+
+```{r}
+VAR(endo_w, exogen = exo_w, p = 6, type = "both") %>% 
+  tsa_VAR_diag %>%
+  write_xlsx("results/tbl_a2_model_diag_w6.xlsx")
+```
+
+```{r}
+var_w <- tsDyn::lineVar(
+  endo_w, exogen = exo_w, lag = 6, 
+  model = "VAR", include = "both", r = 1
+) %>% suppressWarnings()
+```
+
+```{r}
+var_w %>% 
+  summary %>% suppressWarnings() %>% 
+  '[['('bigcoefficients') %>% 
+  t %>% 
+  as.data.frame %>%
+  rownames_to_column() %>%
+  write_xlsx("results/tbl_5_var_w.xlsx")
+```
+
+```{r}
+# var_w %>% str()
+```
+
+```{r}
+library("plotrix")
+
+options(
+  repr.plot.width = 6,
+  repr.plot.height = 6 
+)
+
+png(
+  filename = "figures/fig_a1_stability_w.png",
+  units = "in", 
+  width = 6, 
+  height = 6,
+  pointsize = 10, 
+  res = 300
+)
+
+x <- seq(-1, 1, length = 1000)
+y1 <- sqrt(1-x^2)
+y2 <- -sqrt(1-x^2)
+plot(
+  Re(eigen(var_h_var$A$A1)$values) %>% bound_unit_circle,
+  Im(eigen(vecm_h_var$A$A1)$values) %>% bound_unit_circle,
+  pch=19, col = "blue", 
+  xlab = 'Real part', ylab = 'Complex part',
+  ylim = c(-2, 2), xlim = c(-2, 2)
+)
+points(
+  Re(eigen(vecm_h_var$A$A2)$values) %>% bound_unit_circle,
+  Im(eigen(vecm_h_var$A$A2)$values) %>% bound_unit_circle,
+  pch=19, col = "blue"
+)
+abline(h=0)
+abline(v=0)
+draw.circle(0, 0, 1, nv = 1000, border = NULL, col = NA, lty = 1, lwd = 1)
+
+dev.off()
+```
+
+```{r}
+var_w <- VAR(endo_w, exogen = exo_w, p = 6, type = "both")
+```
+
+```{r}
+var_w %>% summary
+```
+
+```{r}
+# tsDyn::lineVar(endo_w, exogen = exo_w, lag = 6, model = "VAR", include = "both") %>% summary
+```
+
+## Granger Casuality Test
+
+```{r}
+tsa_gc_ty(
+  endo_w, exogen = exo_w, 
+  p = 6, m = 0, type = "both"
+) %>% select(-wald)
+```
+
+```{r}
+tsa_gc_ty(
+  endo_w, exogen = exo_w, 
+  p = 6, m = 0, type = "both"
+) %>% 
+  select(-wald) %>%
+  mutate(chi2_pval = round(chi2_pval, 5)) %>%
+  write_xlsx("results/tbl_a3_granger_w.xlsx")
+```
+
+## IRF
+
+```{r}
+for (i in c("pwf", "pww", "pwx")) {
+  png(
+    filename = glue::glue("figures/fig_3_irf_{i}.png"),
+    units = "in", 
+    width = 7, 
+    height = 7,
+    pointsize = 12, 
+    res = 300
+  )
+  vars::irf(var_w, impulse = i, boot = TRUE, n.ahead = 24, ortho = TRUE) %>% plot
+  dev.off()  
+}
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+vecm_wht <- tsDyn::linear(
+  endo, estim = "ML", include = 'none', LRinclude = 'const', 
+  lag = 2, exogen = exo, r = 1
+) %>% suppressWarnings()
+```
+
+```{r}
+lags = 8
+pt.asympt = rep(0, lags)
+pt.adj = rep(0, lags)
+bg = rep(0, lags)
+es = rep(0, lags)
+
+for (i in 1:lags) {
+  pt.asympt[i] = serial.test(wht_var, lags.pt = i, type = "PT.asymptotic")$serial$p.value
+  pt.adj[i] = serial.test(wht_var, lags.pt = i, type = "PT.adjusted")$serial$p.value
+  bg[i] = serial.test(wht_var, lags.bg = i, type = "BG")$serial$p.value
+  es[i] = serial.test(wht_var, lags.bg = i, type = "ES")$serial$p.value
+}
+
+data.frame(pt.asymptotic = pt.asympt, pt.adjusted = pt.adj, BG = bg, ES = es)
+```
+
+```{r}
+VAR(endo_w, exogen = exo_w, p = 6, type = "const") %>% summary
+```
+
+```{r}
+granger_ty(
+  endo , p = 2, m = 1, type = "const", exogen = exo
+) %>% select(-wald)
+```
+
+```{r}
+VARselect(endo_w, exogen = exo_w, lag.max = 10, type = 'both')
+
+var_w <- VAR(endo_w, exogen = exo_w, p = 6, type = "both")
+var_w %>% tsa_VAR_diag
+
+var_w %>% summary
+```
+
+```{r}
+
+```
+
+```{r}
+x <- rh %>% exp() %>%
+  ts_data.frame %>%
+  ts_wide %>%
+  clean_names %>%
+  mutate(
+    ws2fg = rhws/rhfg,
+    xb2fg = rhxb/rhfg,
+    xb2ws = rhxb/rhws
+  )
+```
+
+```{r}
+describe(x)
+```
+
+```{r}
+ggplot(x, aes(x = time, y = ws2fg)) +
+  geom_line(color = "red") +
+  geom_line(aes(x = time, y = xb2fg), color = "blue")
+```
+
+```{r}
+x %>%
+  filter(rhws > rhxb)
+```
+
+```{r}
+ggplot(x, aes(x = time, y = rhws)) +
+  geom_line(color = "red") +
+  geom_line(aes(x = time, y = rhxb), color = "blue")
+```
+
+# Unit Root Test
+
+```{r}
+# get object name as a string
+get_objname <- function(x) deparse(substitute(x))
+
+# unit root test for a time series
+tsf_ur_adf <- function(y, n_diff = 0, varname = NULL, ...) {
+  
+  varname <- if (is.null(varname)) deparse(substitute(y)) else varname
+  y <- y %>% ts_ts
+  y <- if(n_diff == 0) y else diff(y, n_diff)
+  
+  ur.trend <- ur.df(y, type='trend', lags = 10, selectlags = "BIC", ...)
+  ur.drift <- ur.df(y, type='drift', lags = 10, selectlags = "BIC", ...)
+  ur.none  <- ur.df(y, type='none' , lags = 10, selectlags = "BIC", ...)
+
+  tstat.trend <- ur.trend@teststat
+  tstat.drift <- ur.drift@teststat
+  tstat.none  <- ur.none@teststat
+
+  cv.trend <- ur.trend@cval
+  cv.drift <- ur.drift@cval
+  cv.none  <- ur.none@cval
+  
+  lags.trend <- dim(ur.trend@testreg$coefficients)[1] - 3
+  lags.drift <- dim(ur.drift@testreg$coefficients)[1] - 2
+  lags.none  <- dim(ur.none@testreg$coefficients)[1]  - 1
+
+  df_test <- rbind(
+    cbind(t(tstat.trend), cv.trend, lags.trend),
+    cbind(t(tstat.drift), cv.drift, lags.drift),
+    cbind(t(tstat.none) , cv.none , lags.none)
+  ) %>% 
+    as.data.frame() %>%
+    rename(c("lag" = "lags.trend")) %>%
+    rownames_to_column("hypo") %>%
+    filter(str_starts(hypo, 'tau')) %>%
+    mutate(
+      result = ifelse(abs(statistic) >= abs(`5pct`), 'Reject', 'Accept'),
+      variable = varname,
+      level = paste0('d', n_diff),
+      star = case_when(
+        abs(statistic) > abs(`1pct`) ~ "***",
+        abs(statistic) > abs(`5pct`) ~ "** ",
+        abs(statistic) > abs(`10pct`) ~ "*  ",
+        TRUE ~ "   "
+      ),
+      hypo = case_when(
+        hypo == "tau3" ~ "trend",
+        hypo == "tau2" ~ "constant",
+        hypo == "tau1" ~ "none"
+      ),
+      statistic = format(round(statistic, 3), nsmall = 3) %>% 
+        as.character %>% str_pad(6, "left")
+    ) %>%
+    select(variable, hypo, level, everything())
+  
+  return(df_test)
+}
+```
+
+```{r}
+# unit root test in a table format
+tsf_report_adf <- function(adf_test) {
+  adf_test %>% 
+    mutate(
+      stat_star = glue::glue(
+        "{statistic}{star}({lag})"
+      ) %>% as.character()
+    ) %>%
+    pivot_wider(
+      id_cols = c("variable"),
+      names_from = c("level", "hypo"),
+      values_from = c("stat_star")
+    )
+}
+```
+
+```{r}
+rh_names <- c('RHFG', 'RHWS', 'RHXB')
+rw_names <- c('RWFG', 'RWWS', 'RWXB')
+
+params_rh <- expand_grid(rh_names, c(0,1)) %>%
+  set_names(c('name', 'ndiff')) %>%
+  mutate(ser = rh[, name] %>% as.list)
+
+params_rw <- expand_grid(rw_names, c(0,1)) %>%
+  set_names(c('name', 'ndiff')) %>%
+  mutate(ser = rw[, name] %>% as.list)
+
+params <- rbind(params_rh, params_rw)
+```
+
+```{r}
+library(psych)
+s1 <- describe(x$rh$endo %>% exp %>% ts_wide) %>% as_tibble()
+s2 <- describe(x$rw$endo %>% exp %>% ts_wide) %>% as_tibble()
+s0 <- bind_rows(s1, s2) %>% select(mean, sd, min, max)
+s0 %>% round(0)
+```
+
+# Steps
+
+
+## Overall Procedure
+1. Model Specification
+  - Unit Root Test -> `urca::ur.df`
+  - AR Order or Lag Selection -> `VARselect`
+  - Functional Form -> `tsDyn::VECM` and `AIC`, `BIC`
+  - Cointegrating Rank -> `tsDyn::rank.test`
+  - Choice of Deterministic Term
+    - exos + seasonal 
+
+2. Model Checking
+  - Descriptive Analysis
+  - Diagnostic Tests
+    * Serial Autocorrelation
+    * Heteroskedasticity
+    * Normality
+    * Stability
+    
+3. Analysis
+  - Interpret
+  - Test economic theory
+  - Granger Causality
+  - IRF
+
+
+## Toda Yamamoto Procedure
+1. Stationary test and find maximum order of integration called `m`
+2. Determine optimal lag of VAR in levels using information criteria called `p`
+3. Given lag `p` estimate VAR(p) and test for serial correlation. If failed to pass add more lag until there is no serial correlation problem.
+4. Conduct a cointegration test i.e. Johansen test keep result for cross-checking
+5. Estimate VAR(p+m)
+6. Wald test of the first `p` lags not `p+m` and associated test statistics is distributed as Chi-square(p)
+
+
+# Vertical PT: Hommali Rice
+
+```{r}
+endo <- x$rh$endo
+exo <- x$rh$exo
+```
+
+```{r}
+plot(endo)
+```
+
+## Model Specification
+
+
+### Lag Selection
+
+```{r}
+VARselect(endo, lag.max = 5, type = 'const')$criteria %>% t
+```
+
+```{r}
+VARselect(endo, lag.max = 5, type = 'both')
+```
+
+```{r}
+VARselect(endo, lag.max = 5, type = 'both')$criteria %>% t %>% 
+  as_tibble() %>% janitor::clean_names() %>%
+  select(4,1,3,2) %>%
+  write_xlsx('results/02_lag_select_rh.xlsx')
+```
+
+```{r}
+check_VAR <- function(var_obj) {
+  res <- list()
+  res$serial <- serial.test(var_obj, lags.pt = 12, type = 'PT.asymptotic')
+  res$arch   <- arch.test(var_obj, lags.multi = 12)
+  res$norm   <- normality.test(var_obj)
+  return(res)
+}
+
+VAR(endo, p = 1, type = "both") %>% check_VAR()
+```
+
+> **optimal lag** = 1
+
+
+### Deterministic Terms
+
+```{r}
+x <- VECM(Canada, lag = 2, estim = "ML", include = 'both',  LRinclude = 'both')
+rank.test(x)
+```
+
+```{r}
+select_DT <- function(endo, exo) {
+  spec1 <- VECM(endo, lag = 1, estim = "ML", include = 'none',  LRinclude = 'none' , exogen = exo)
+  spec2 <- VECM(endo, lag = 1, estim = "ML", include = 'none',  LRinclude = 'const', exogen = exo)
+  spec3 <- VECM(endo, lag = 1, estim = "ML", include = 'const', LRinclude = 'const', exogen = exo)
+  spec4 <- VECM(endo, lag = 1, estim = "ML", include = 'const', LRinclude = 'trend', exogen = exo)
+  spec5 <- VECM(endo, lag = 1, estim = "ML", include = 'trend', LRinclude = 'both' , exogen = exo)
+#   spec6 <- VECM(endo, lag = 1, estim = "ML", include = 'none',  LRinclude = 'trend' , exogen = exo)
+  
+  res <- list(spec1, spec2, spec3, spec4, spec5)
+  tibble(
+    model = 1:length(res),
+    AIC = res %>% map_dbl(AIC),
+    BIC = res %>% map_dbl(BIC)
+  ) %>% arrange(BIC)
+}
+
+select_DT(endo, exo = exo)
+```
+
+```{r}
+x <- VECM(endo, lag = 1, estim = "ML", include = 'none',  LRinclude = 'const', exogen = exo)
+rank.test(x) %>% summary() #%>% 
+#   write_xlsx('results/rh_03_rank_test.xlsx')
+```
+
+```{r}
+x %>% summary()
+```
+
+```{r}
+vecm_selected <- VECM(endo, lag = 1, estim = "ML", include = 'const', LRinclude = 'trend' , exogen = exo)
+rank.test(vecm_selected)
+```
+
+```{r}
+vecm_est <- VECM(endo, lag = 1, r = 2, estim = "ML", include = 'const', LRinclude = 'both', exogen = exo)
+```
+
+```{r}
+vecm_est %>% summary()
+```
+
+```{r}
+vecm_est$model.specific$beta
+```
+
+```{r}
+var.rh <- VAR(endo, lag.max = 4, type = 'const', exogen = exo)
+```
+
+```{r}
+vecm_rh.trace <- ca.jo(
+  x$rh$endo, type = 'trace', ecdet = 'const', K = 2,
+  spec = 'transitory', dumvar = x$rh$exo, season = 12
+)
+
+vecm_rh.eigen <- ca.jo(
+  x$rh$endo, type = 'eigen', ecdet = 'const', K = 2, 
+  spec = 'transitory', dumvar = x$rh$exo, season = 12
+)
+
+summary(vecm_rh.trace)
+summary(vecm_rh.eigen)
+```
+
+> r = 2
+
+```{r}
+beta <- vecm_rh.trace@V
+beta[, 2] <- beta[, 2] / beta[2,2]
+beta[, 3] <- beta[, 3] / beta[3,3]
+beta
+```
+
+```{r}
+# tsDyn::VECM(endo, r = 2, lag = 1, exogen = exo, estim = "ML") %>% str
+```
+
+```{r}
+vecm_rh <- cajorls(vecm_rh.trace, r = 2)
+vecm_rh$rlm %>% summary
+```
+
+```{r}
+vecm_rh
+```
+
+```{r}
+# vecm_rh$rlm %>% summary
+```
+
+```{r}
+21664.70*0.76
+```
+
+```{r}
+21664.70*0.9107844
+```
+
+```{r jupyter={'outputs_hidden': True}}
+endo
+```
+
+```{r}
+1.55/0.76
+```
+
+```{r}
+vecm_rh$beta %>% as.data.frame
+```
+
+```{r}
+data(Canada)
+vecm.x <- ca.jo(Canada)
+var.x <- vec2var(vecm.x)
+```
+
+```{r}
+var.x$A
+```
+
+## Model Checking
+
+```{r}
+Mod(eigen(diag(3) - var_rh$A$A1 - var_rh$A$A2)$values)
+```
+
+```{r}
+var_rh <- vec2var(vecm_rh.trace, r = 2)
+serial1 <- serial.test(var_rh, lags.pt = 12, type = 'PT.asymptotic')
+arch1 <- arch.test(var_rh, lags.multi = 12)
+norm1 <- normality.test(var_rh)
+
+serial1$serial
+arch1$arch.mul
+norm1$jb.mul$JB
+```
+
+```{r}
+vec2var
+```
+
+```{r}
+eigen(var_rh$A$A1)$values
+```
+
+```{r}
+eigen(var_rh$A$A2)
+```
+
+## Analysis
+
+
+### Granger
+
+
+### IRF
+
+
+### LOP
+
+```{r}
+
+```
+
+```{r}
+H1 = ca.jo(
+  x$rh$endo, type = 'trace', ecdet = 'const', K = 2, 
+  spec = 'transitory', dumvar = x$rh$exo
+)
+H1 %>% summary()
+```
+
+```{r}
+HA = matrix(c( 1, 0, 0,
+               0, 1, 0,
+              -1, 0, 0,
+               0, 0, 1
+             ), 
+            ncol = 3, byrow = TRUE)
+
+blrtest(z = vecm_rh.trace, H = HA, r = 1) %>% summary()
+```
+
+```{r}
+save_irf_plot = function(model, impulse, width = 6, height = 8, n.ahead = 12) {
+  model_name = deparse(substitute(model))
+  filename = paste0("../img/irf_", model_name, '_', impulse, ".png")
+  png(filename = filename,
+    units = "in", 
+    width = width, 
+    height = height,
+    pointsize = 10, 
+    res = 300)
+  plot(irf(model, impulse = impulse, n.ahead = n.ahead))
+  dev.off()
+}
+```
+
+```{r}
+save_irf_plot(var_rh, 'RHFG')
+save_irf_plot(var_rh, 'RHWS')
+save_irf_plot(var_rh, 'RHXB')
+```
+
+```{r}
+TVECM.HStest(endo[, c(1,3)])
+```
+
+```{r}
+# TVECM(endo[, c(1,3)], common = 'only_ECT', include = 'const') %>% summary()
+```
+
+```{r}
+# tsDyn::VECM(endo, lag = 1, r = 2, estim = "ML",
+#             include = 'const', exogen = exo) %>% summary()
+```
+
+# Vertical : White Rice
+
+```{r}
+endo <- x$rw$endo
+exo <- x$rw$exo
+```
+
+```{r}
+summary(endo %>% exp())
+```
+
+```{r}
+
+```
+
+```{r}
+# set_figsize(10, 6)
+filename = paste0("../img/plot_", 'rhfg', ".png")
+png(filename = filename,
+  units = "in", 
+  width = 12, 
+  height = 6, 
+  pointsize = 10, 
+  res = 300)
+plot.ts(endo)
+dev.off()
+```
+
+## Model Specification
+
+```{r}
+VARselect(endo, lag.max = 5, type = 'const')
+```
+
+```{r}
+VARselect(endo, lag.max = 5, type = 'both')
+```
+
+```{r}
+VARselect(endo, lag.max = 5, type = 'const')$criteria %>% t %>% 
+  as_tibble() %>% janitor::clean_names() %>%
+  select(4,1,3,2) %>%
+  write_xlsx('results/02_lag_select_rw.xlsx')
+```
+
+```{r}
+vecm.trace = ca.jo(
+  endo, type = 'trace', ecdet = 'const', K = 2,
+  spec = 'transitory', dumvar = exo
+)
+
+vecm.eigen = ca.jo(
+  endo, type = 'eigen', ecdet = 'const', K = 2, 
+  spec = 'transitory', dumvar = exo
+)
+
+summary(vecm.trace)
+summary(vecm.eigen)
+```
+
+### Law of One Price
+
+```{r}
+HA = matrix(c( 1, 1, 1, 1,
+              -1, 0, 0, 0,
+               0,-1, 0, 0,
+               0, 0,-1, 0,
+               0, 0, 0,-1
+             ), 
+            ncol = 4, byrow = TRUE)
+
+blrtest(z = H1, H = HA, r = 4) %>% summary()
+
+# H5 = matrix(c( 1, -1), 
+#             ncol = 1, byrow = TRUE)
+
+# H5 = c(1, -1)
+# Hlop = matrix(c(1, -1, -1), nrow = 3, ncol = 1)
+
+# bh5lrtest(z = H1, H = H5, r = 1) %>% summary()
+```
+
+```{r}
+rh.cajolst = cajolst(x$rh$endo, trend = TRUE)
+slotNames(rh.cajolst)
+summary(rh.cajolst)
+```
+
+```{r}
+
+```
+
+```{r}
+index(x$rh$endo)[59]
+```
+
+```{r}
+rh.cajolst@bp
+```
+
+```{r}
+rh.cajolst
+```
+
+```{r}
+args(ca.jo)
+```
+
+```{r}
+ca.jo(rh05, type = 'eigen', ecdet = "trend") %>% summary()
+```
+
+```{r}
+summary(rh.cajolst)
+```
+
+```{r}
+index(rw)[13]
+```
+
+# VAR
+
+
+## Model Specification
+
+```{r}
+args(VARselect)
+```
+
+```{r}
+VARselect(rh05, lag.max = 12, type = "both")
+```
+
+## Modle Estimation
+
+```{r}
+args(VAR)
+```
+
+```{r}
+rh05.VAR = VAR(rh05, p = 2, type = "both")
+```
+
+```{r}
+rh10.VAR = VAR(rh10, p = 2, type = "both")
+```
+
+```{r}
+summary(rh05.VAR)
+```
+
+## Model Daignostic
+
+```{r}
+roots(rh05.VAR)
+```
+
+### Autocorrelation
+
+```{r}
+args(serial.test)
+```
+
+```{r}
+rh05.VAR.ser = serial.test(rh05.VAR)
+rh05.VAR.ser
+```
+
+```{r}
+
+```
+
+```{r}
+set_figsize(10, 8)
+rh05.VAR.ser = serial.test(rh05.VAR)
+plot(rh05.VAR.ser, names = "RHFG")
+plot(rh05.VAR.ser, names = "RHWS")
+plot(rh05.VAR.ser, names = "RHXB")
+```
+
+### Hetero
+
+```{r}
+sp_vector <- c(1973.1,1961.53,1993.23,1937.27,2044.57,2054.27,2028.18,2082.2,2079.99,2094.86,2111.94,
+               2099.29,2094.14,2039.87,1944.41,2024.81,2080.62,2054.08,1918.6,1904.42,2021.95,
+               2075.54,2065.55,2083.89,2148.9,2170.95,2157.69,2143.02,2164.99,2246.63,2275.12,
+               2329.91,2366.82,2359.31,2395.35,2433.99)
+sp_ts <- ts(sp_vector,start=c(2014,7),frequency=12)
+```
+
+```{r}
+dum = ts(rep(1, 13), start=c(2008, 10),frequency = 12)
+```
+
+```{r}
+c(as.xts(rh05), as.xts(dum))
+```
+
+```{r}
+data = replace_na(ts.union(rh05, dum), 0)
+```
+
+```{r}
+# data
+```
+
+```{r}
+VAR(data, p = 3, type = "both", exogen = dum)
+```
+
+```{r}
+
+```
+
+```{r}
+rh05.VAR = VAR(rh05, p = 4, type = "both", season = 12)
+```
+
+```{r}
+rh05.VAR.arch = arch.test(rh05.VAR, lags.multi = 12)
+rh05.VAR.arch
+```
+
+```{r}
+rh05.VAR %>% normality.test %>% plot
+```
+
+## Normality
+
+```{r}
+rh05.VAR %>% stability %>% plot
+```
+
+# Cointegration Analysis
+
+```{r}
+args(ca.jo)
+```
+
+```{r}
+vars::VARselect(rh05)
+vars::VARselect(rh06)
+```
+
+```{r}
+rhrg  = price[, c('RHFG', 'RGFG')] %>% log() %>% na.omit()
+```
+
+```{r}
+rh.eigen = ca.jo(rh, type = "eigen", K = 2, ecdet = "trend")
+rh.trace = ca.jo(rh, type = "trace", K = 2, ecdet = "trend")
+rw.eigen = ca.jo(rw, type = "eigen", K = 2, ecdet = "trend")
+rw.trace = ca.jo(rw, type = "trace", K = 2, ecdet = "trend")
+rg.eigen = ca.jo(rg, type = "eigen", K = 2, ecdet = "trend")
+rg.trace = ca.jo(rg, type = "trace", K = 2, ecdet = "trend")
+
+rhfg.eigen = ca.jo(rhfg, type = "eigen", K = 2, ecdet = "trend")
+rhfg.trace = ca.jo(rhfg, type = "trace", K = 2, ecdet = "trend")
+rwfg.eigen = ca.jo(rwfg, type = "eigen", K = 2, ecdet = "trend")
+rwfg.trace = ca.jo(rwfg, type = "trace", K = 2, ecdet = "trend")
+rgfg.eigen = ca.jo(rgfg, type = "eigen", K = 2, ecdet = "trend")
+rgfg.trace = ca.jo(rgfg, type = "trace", K = 2, ecdet = "trend")
+
+rfg.eigen  = ca.jo(rfg, type = "eigen", K = 2, ecdet = "trend")
+rfg.trace  = ca.jo(rfg, type = "trace", K = 2, ecdet = "trend")
+
+rhrg.eigen  = ca.jo(rhrg, type = "eigen", K = 2, ecdet = "trend")
+rhrg.trace  = ca.jo(rhrg, type = "trace", K = 2, ecdet = "trend")
+```
+
+```{r}
+tail(rw)
+```
+
+```{r}
+rw.xts = as.xts(rw)
+```
+
+```{r}
+x = ts(NA, start = c(2003, 1), end = c(2020, 3), frequency = 12)
+```
+
+```{r}
+dum = ts(rep(1, 13), start=c(2008, 10), frequency = 12)
+```
+
+```{r}
+rw.eigen = ca.jo(rw.xts, type = "eigen", K = 2, 
+                 ecdet = "trend", season = 12)
+```
+
+```{r}
+summary(rw.eigen)
+```
+
+```{r}
+summary(rh.trace)
+```
+
+```{r}
+cbind(rh.trace@teststat, rh.trace@cval)
+```
+
+```{r}
+rh.trace@V
+```
+
+```{r}
+A1 = matrix(c(1,0,0, 0,1,0), 
+            nrow=3, ncol=2)
+A2 = matrix(c(1,0,0, 0,0,1),
+            nrow=3, ncol=2)
+```
+
+```{r}
+summary(alrtest(z = rh.trace, A = A1, r = 1))
+summary(alrtest(z = rh.trace, A = A2, r = 1))
+```
+
+```{r}
+rw.trace
+```
+
+```{r}
+series <- rnorm(1000)
+y.st <- stats::filter(series, filter = c(0.6, -0.28), method = "recursive")
+ar2.st <- arima(y.st, c(2,0,0), include.mean = FALSE,
+                transform.pars = FALSE, method = "ML")
+
+polyroot(c(1, -ar2.st$coef))
+
+Mod(polyroot(c(1, -ar2.st$coef)))
+Im(polyroot(c(1, -ar2.st$coef)))
+Re(polyroot(c(1, -ar2.st$coef)))
+```

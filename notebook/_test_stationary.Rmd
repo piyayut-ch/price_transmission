@@ -1,0 +1,97 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+# โหลด R packages และ ข้อมูล
+
+```{r}
+if (!require("pacman")) install.packages("pacman")
+pkgs = c('urca', 'vars', 'tidyverse', 'xts')
+pacman::p_load(pkgs, character.only=TRUE)
+```
+
+```{r}
+source("../R/oaeTS.R", encoding = "UTF-8")
+year_now = 2563
+
+options(
+  repr.plot.width=10,
+  repr.plot.height=6,
+  repr.plot.res=300
+)
+```
+
+```{r}
+price = readRDS('../data/price_rice_filled.rds')
+var_names = colnames(price)
+colnames(price) = str_replace(colnames(price), "_0", "")
+price_xts = price %>% as.xts()
+price_log = price
+price_log[, startsWith(var_names, 'R')] = 
+  price_log[, startsWith(var_names, 'R')] %>% log()
+tail(price_log)
+```
+
+```{r}
+y = price_log[, 'RHFG'] %>% window(start = 1990)
+
+ur_adf = function(y, n_diff = 0, ...) {
+  
+  y = if(n_diff == 0) y else diff(y, n_diff)
+  
+  ur.trend = ur.df(y, type='trend', selectlags = "AIC", ...)
+  ur.drift = ur.df(y, type='drift', selectlags = "AIC", ...)
+  ur.none  = ur.df(y, type='none', selectlags = "AIC", ...)
+
+  tstat.trend = ur.trend@teststat
+  tstat.drift = ur.drift@teststat
+  tstat.none  = ur.none@teststat
+
+  cv.trend = ur.trend@cval
+  cv.drift = ur.drift@cval
+  cv.none  = ur.none@cval
+
+  df_test = rbind(
+    cbind(t(tstat.trend), cv.trend),
+    cbind(t(tstat.drift), cv.drift),
+    cbind(t(tstat.none) , cv.none)
+  ) %>% 
+  as.data.frame() %>%
+  rownames_to_column("hypo") %>%
+  mutate(
+    result = ifelse(abs(statistic) >= abs(`5pct`), 'Reject', 'Accept'),
+    level = paste0('d', n_diff)
+  ) %>%
+  filter(str_starts(hypo, 'tau')) %>%
+  select(hypo, level, everything())
+  
+  return(df_test)
+}
+```
+
+```{r}
+# y = price_log[, 'RHXB'] %>% window(start = 2007)
+# y = price_log[, 'RHWS'] %>% window(start = 2007)
+y = price_log[, 'RGXB'] %>% window(start = 2007)
+
+rbind(ur_adf(y, 0), ur_adf(y, 1))
+```
+
+```{r}
+plot(y)
+```
+
+```{r}
+
+```

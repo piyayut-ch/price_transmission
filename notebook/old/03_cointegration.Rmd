@@ -1,0 +1,586 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.4.1
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+# โหลด packages
+
+```{r}
+source("../R/oaeTS.R", encoding = "UTF-8")
+year_now = 2563
+```
+
+```{r}
+price = readRDS('../data/rice/rice_price_list.rds')
+
+# price = readRDS('../data/rice/rice_price_filled.rds')
+# colnames(price) = str_replace(colnames(price), "_0", "")
+# price_xts = price %>% as.xts()
+# colnames(price)
+```
+
+```{r}
+str(price)
+```
+
+```{r}
+# rh   = price[, c('RHFG', 'RHWS', 'RHXB')] %>% log() %>% na.omit()
+# rw   = price[, c('RWFG', 'RWWS', 'RWXB')] %>% log() %>% na.omit()
+# rg   = price[, c('RGFG', 'RGWS', 'RGXB')] %>% log() %>% na.omit()
+
+# rhfg = price[, c('RHFG_NR', 'RHFG_BR', 'RHFG_SI', 'RHFG_SU', 'RHFG_UR')] %>% log() %>% na.omit()
+# rwfg = price[, c('RWFG_NS', 'RWFG_KP', 'RWFG_PC', 'RWFG_PS', 'RWFG_SH')] %>% log() %>% na.omit()
+# rgfg = price[, c('RGFG_UN', 'RGFG_SN', 'RGFG_KK', 'RGFG_MS', 'RGFG_KL')] %>% log() %>% na.omit()
+
+# rfg  = price[, c('RHFG', 'RWFG', 'RGFG')] %>% log() %>% na.omit()
+```
+
+```{r}
+# window(price$rh[, 1:3], start = 2004)
+```
+
+```{r}
+x = list()
+
+# vertical
+x$rh = list(endo = price$rh[, 1:3] %>% window(start = 2004), 
+            exo  = price$rh[, 4:5] %>% window(start = 2004))
+x$rw = list(endo = price$rw[, 1:3] %>% window(start = 2004), 
+            exo  = price$rw[, 4:5] %>% window(start = 2004))
+x$rg = list(endo = price$rg[, 1:3] %>% window(start = 2004), 
+            exo  = price$rg[, 4:5] %>% window(start = 2004))
+
+# spatial
+x$rhfg = list(endo = price$rhfg[, 1:5], exo = price$rhfg[, 6:7])
+x$rwfg = list(endo = price$rwfg[, 1:5], exo = price$rwfg[, 6:7])
+x$rgfg = list(endo = price$rgfg[, 1:5], exo = price$rgfg[, 6:7])
+
+# cross products
+x$rfg = list(endo = price$rfg[, 1:3], exo = price$rfg[, 4:5])
+```
+
+**Steps**
+1. Model Specification
+  - AR Order or Lag Selection
+  - Cointegrating Rank
+  - Choice of Deterministic Term
+  - Testing Restrictions to alphas and betas
+  - Testing Restriction for SR params and fitting subset models
+2. Model Checking
+  - Descriptive Analysis
+  - Diagnostic Tests
+    * Serial Autocorrelation
+    * Heteroskedasticity
+    * Normality
+3. Analysis
+  - Interpret
+  - Test economic theory
+  - Granger Causality
+  - IRF
+
+
+# Vertical PT: Hommali Rice
+
+```{r}
+endo = x$rh$endo
+exo = x$rh$exo
+```
+
+```{r}
+summary(endo %>% exp())
+```
+
+```{r}
+# set_figsize(10, 6)
+filename = paste0("../img/plot_", 'rh', ".png")
+png(filename = filename,
+  units = "in", 
+  width = 12, 
+  height = 6, 
+  pointsize = 10, 
+  res = 300)
+plot.ts(endo)
+dev.off()
+```
+
+```{r}
+ur.df(endo[, 1], 'trend', lags = 12, selectlags = 'AIC') %>% summary()
+```
+
+```{r}
+ur.df(endo[, 1], 'trend', lags = 12, selectlags = 'AIC')
+ur.df(endo[, 2], 'trend', lags = 12, selectlags = 'AIC')
+ur.df(endo[, 3], 'trend', lags = 12, selectlags = 'AIC')
+ur.df(endo[, 1], 'trend', lags = 12, selectlags = 'AIC')@cval
+```
+
+```{r}
+ur.df(endo[, 1], 'drift', lags = 12, selectlags = 'AIC')
+ur.df(endo[, 2], 'drift', lags = 12, selectlags = 'AIC')
+ur.df(endo[, 3], 'drift', lags = 12, selectlags = 'AIC')
+ur.df(endo[, 1], 'drift', lags = 12, selectlags = 'AIC')@cval
+```
+
+```{r}
+ur.df(endo[, 1], 'none', lags = 12, selectlags = 'AIC')
+ur.df(endo[, 2], 'none', lags = 12, selectlags = 'AIC')
+ur.df(endo[, 3], 'none', lags = 12, selectlags = 'AIC')
+ur.df(endo[, 1], 'none', lags = 12, selectlags = 'AIC')@cval
+```
+
+```{r}
+var.rh = VAR(endo[, c(1,2)], lag.max=12, type = 'both')
+```
+
+```{r}
+apt::ecmSymFit(endo[, 1], endo[, 2])
+```
+
+```{r}
+causality(var.rh, cause = 'RHWS')
+```
+
+```{r}
+causality(var.rh, cause = 'RHXB')
+```
+
+```{r}
+causality(var.rh, cause = '')
+```
+
+## Model Specification
+
+```{r}
+VARselect(endo, lag.max = 4, type = 'const', exogen = exo)
+```
+
+```{r}
+VARselect(endo, lag.max = 4, type = 'both', exogen = exo)
+```
+
+```{r}
+var.rh = VAR(endo, lag.max = 4, type = 'const', exogen = exo)
+```
+
+```{r}
+# causality(var.rh, cause = 'RHFG')
+```
+
+```{r}
+vecm_rh.trace = ca.jo(
+  x$rh$endo, type = 'trace', ecdet = 'const', K = 2,
+  spec = 'transitory', dumvar = x$rh$exo
+)
+
+vecm_rh.eigen = ca.jo(
+  x$rh$endo, type = 'eigen', ecdet = 'const', K = 2, 
+  spec = 'transitory', dumvar = x$rh$exo
+)
+
+summary(vecm_rh.trace)
+summary(vecm_rh.eigen)
+```
+
+r = 2
+
+```{r}
+vecm_rh = cajorls(vecm_rh.trace, r = 1)
+```
+
+```{r}
+
+```
+
+```{r}
+vecm_rh$rlm %>% summary()
+```
+
+## Model Testing
+
+```{r}
+var_rh = vec2var(vecm_rh.trace)
+serial1 = serial.test(var_rh, lags.pt = 12, type = 'PT.asymptotic')
+arch1 = arch.test(var_rh, lags.multi = 12)
+norm1 = normality.test(var_rh)
+
+serial1$serial
+arch1$arch.mul
+norm1$jb.mul$JB
+```
+
+## Test Law of One Price
+
+```{r}
+H1 = ca.jo(
+  x$rh$endo, type = 'trace', ecdet = 'const', K = 2, 
+  spec = 'transitory', dumvar = x$rh$exo
+)
+H1 %>% summary()
+```
+
+```{r}
+HA = matrix(c( 1, 0, 0,
+               0, 1, 0,
+              -1, 0, 0,
+               0, 0, 1
+             ), 
+            ncol = 3, byrow = TRUE)
+
+blrtest(z = vecm_rh.trace, H = HA, r = 1) %>% summary()
+```
+
+```{r}
+save_irf_plot = function(model, impulse, width = 6, height = 8, n.ahead = 12) {
+  model_name = deparse(substitute(model))
+  filename = paste0("../img/irf_", model_name, '_', impulse, ".png")
+  png(filename = filename,
+    units = "in", 
+    width = width, 
+    height = height,
+    pointsize = 10, 
+    res = 300)
+  plot(irf(model, impulse = impulse, n.ahead = n.ahead))
+  dev.off()
+}
+```
+
+```{r}
+save_irf_plot(var_rh, 'RHFG')
+save_irf_plot(var_rh, 'RHWS')
+save_irf_plot(var_rh, 'RHXB')
+```
+
+```{r}
+TVECM.HStest(endo[, c(1,3)])
+```
+
+```{r}
+# TVECM(endo[, c(1,3)], common = 'only_ECT', include = 'const') %>% summary()
+```
+
+```{r}
+# tsDyn::VECM(endo, lag = 1, r = 2, estim = "ML",
+#             include = 'const', exogen = exo) %>% summary()
+```
+
+# Horizontal : Hommali Rice
+
+```{r}
+endo = x$rhfg$endo
+exo = x$rhfg$exo
+```
+
+```{r}
+summary(endo %>% exp())
+```
+
+```{r}
+# set_figsize(10, 6)
+filename = paste0("../img/plot_", 'rhfg', ".png")
+png(filename = filename,
+  units = "in", 
+  width = 12, 
+  height = 6, 
+  pointsize = 10, 
+  res = 300)
+plot.ts(endo)
+dev.off()
+```
+
+## Model Specification
+
+```{r}
+VARselect(endo, lag.max = 4, type = 'const', exogen = exo)
+```
+
+```{r}
+vecm.trace = ca.jo(
+  endo, type = 'trace', ecdet = 'const', K = 2,
+  spec = 'transitory', dumvar = exo
+)
+
+vecm.eigen = ca.jo(
+  endo, type = 'eigen', ecdet = 'const', K = 2, 
+  spec = 'transitory', dumvar = exo
+)
+
+summary(vecm.trace)
+summary(vecm.eigen)
+```
+
+### Law of One Price
+
+```{r}
+HA = matrix(c( 1, 1, 1, 1,
+              -1, 0, 0, 0,
+               0,-1, 0, 0,
+               0, 0,-1, 0,
+               0, 0, 0,-1
+             ), 
+            ncol = 4, byrow = TRUE)
+
+blrtest(z = H1, H = HA, r = 4) %>% summary()
+
+# H5 = matrix(c( 1, -1), 
+#             ncol = 1, byrow = TRUE)
+
+# H5 = c(1, -1)
+# Hlop = matrix(c(1, -1, -1), nrow = 3, ncol = 1)
+
+# bh5lrtest(z = H1, H = H5, r = 1) %>% summary()
+```
+
+```{r}
+rh.cajolst = cajolst(x$rh$endo, trend = TRUE)
+slotNames(rh.cajolst)
+summary(rh.cajolst)
+```
+
+```{r}
+
+```
+
+```{r}
+index(x$rh$endo)[59]
+```
+
+```{r}
+rh.cajolst@bp
+```
+
+```{r}
+rh.cajolst
+```
+
+```{r}
+args(ca.jo)
+```
+
+```{r}
+ca.jo(rh05, type = 'eigen', ecdet = "trend") %>% summary()
+```
+
+```{r}
+summary(rh.cajolst)
+```
+
+```{r}
+index(rw)[13]
+```
+
+# VAR
+
+
+## Model Specification
+
+```{r}
+args(VARselect)
+```
+
+```{r}
+VARselect(rh05, lag.max = 12, type = "both")
+```
+
+## Modle Estimation
+
+```{r}
+args(VAR)
+```
+
+```{r}
+rh05.VAR = VAR(rh05, p = 2, type = "both")
+```
+
+```{r}
+rh10.VAR = VAR(rh10, p = 2, type = "both")
+```
+
+```{r}
+summary(rh05.VAR)
+```
+
+## Model Daignostic
+
+```{r}
+roots(rh05.VAR)
+```
+
+### Autocorrelation
+
+```{r}
+args(serial.test)
+```
+
+```{r}
+rh05.VAR.ser = serial.test(rh05.VAR)
+rh05.VAR.ser
+```
+
+```{r}
+
+```
+
+```{r}
+set_figsize(10, 8)
+rh05.VAR.ser = serial.test(rh05.VAR)
+plot(rh05.VAR.ser, names = "RHFG")
+plot(rh05.VAR.ser, names = "RHWS")
+plot(rh05.VAR.ser, names = "RHXB")
+```
+
+### Hetero
+
+```{r}
+sp_vector <- c(1973.1,1961.53,1993.23,1937.27,2044.57,2054.27,2028.18,2082.2,2079.99,2094.86,2111.94,
+               2099.29,2094.14,2039.87,1944.41,2024.81,2080.62,2054.08,1918.6,1904.42,2021.95,
+               2075.54,2065.55,2083.89,2148.9,2170.95,2157.69,2143.02,2164.99,2246.63,2275.12,
+               2329.91,2366.82,2359.31,2395.35,2433.99)
+sp_ts <- ts(sp_vector,start=c(2014,7),frequency=12)
+```
+
+```{r}
+dum = ts(rep(1, 13), start=c(2008, 10),frequency = 12)
+```
+
+```{r}
+c(as.xts(rh05), as.xts(dum))
+```
+
+```{r}
+data = replace_na(ts.union(rh05, dum), 0)
+```
+
+```{r}
+# data
+```
+
+```{r}
+VAR(data, p = 3, type = "both", exogen = dum)
+```
+
+```{r}
+
+```
+
+```{r}
+rh05.VAR = VAR(rh05, p = 4, type = "both", season = 12)
+```
+
+```{r}
+rh05.VAR.arch = arch.test(rh05.VAR, lags.multi = 12)
+rh05.VAR.arch
+```
+
+```{r}
+rh05.VAR %>% normality.test %>% plot
+```
+
+## Normality
+
+```{r}
+rh05.VAR %>% stability %>% plot
+```
+
+# Cointegration Analysis
+
+```{r}
+args(ca.jo)
+```
+
+```{r}
+vars::VARselect(rh05)
+vars::VARselect(rh06)
+```
+
+```{r}
+rhrg  = price[, c('RHFG', 'RGFG')] %>% log() %>% na.omit()
+```
+
+```{r}
+rh.eigen = ca.jo(rh, type = "eigen", K = 2, ecdet = "trend")
+rh.trace = ca.jo(rh, type = "trace", K = 2, ecdet = "trend")
+rw.eigen = ca.jo(rw, type = "eigen", K = 2, ecdet = "trend")
+rw.trace = ca.jo(rw, type = "trace", K = 2, ecdet = "trend")
+rg.eigen = ca.jo(rg, type = "eigen", K = 2, ecdet = "trend")
+rg.trace = ca.jo(rg, type = "trace", K = 2, ecdet = "trend")
+
+rhfg.eigen = ca.jo(rhfg, type = "eigen", K = 2, ecdet = "trend")
+rhfg.trace = ca.jo(rhfg, type = "trace", K = 2, ecdet = "trend")
+rwfg.eigen = ca.jo(rwfg, type = "eigen", K = 2, ecdet = "trend")
+rwfg.trace = ca.jo(rwfg, type = "trace", K = 2, ecdet = "trend")
+rgfg.eigen = ca.jo(rgfg, type = "eigen", K = 2, ecdet = "trend")
+rgfg.trace = ca.jo(rgfg, type = "trace", K = 2, ecdet = "trend")
+
+rfg.eigen  = ca.jo(rfg, type = "eigen", K = 2, ecdet = "trend")
+rfg.trace  = ca.jo(rfg, type = "trace", K = 2, ecdet = "trend")
+
+rhrg.eigen  = ca.jo(rhrg, type = "eigen", K = 2, ecdet = "trend")
+rhrg.trace  = ca.jo(rhrg, type = "trace", K = 2, ecdet = "trend")
+```
+
+```{r}
+tail(rw)
+```
+
+```{r}
+rw.xts = as.xts(rw)
+```
+
+```{r}
+x = ts(NA, start = c(2003, 1), end = c(2020, 3), frequency = 12)
+```
+
+```{r}
+dum = ts(rep(1, 13), start=c(2008, 10), frequency = 12)
+```
+
+```{r}
+rw.eigen = ca.jo(rw.xts, type = "eigen", K = 2, 
+                 ecdet = "trend", season = 12)
+```
+
+```{r}
+summary(rw.eigen)
+```
+
+```{r}
+summary(rh.trace)
+```
+
+```{r}
+cbind(rh.trace@teststat, rh.trace@cval)
+```
+
+```{r}
+rh.trace@V
+```
+
+```{r}
+A1 = matrix(c(1,0,0, 0,1,0), 
+            nrow=3, ncol=2)
+A2 = matrix(c(1,0,0, 0,0,1),
+            nrow=3, ncol=2)
+```
+
+```{r}
+summary(alrtest(z = rh.trace, A = A1, r = 1))
+summary(alrtest(z = rh.trace, A = A2, r = 1))
+```
+
+```{r}
+rw.trace
+```
+
+```{r}
+
+```
